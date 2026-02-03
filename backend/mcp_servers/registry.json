@@ -1,0 +1,165 @@
+{
+  "registry": {
+    "version": "1.0.0",
+    "last_updated": "2026-02-01"
+  },
+  "categories": {
+    "environment": {
+      "name": "环境数据",
+      "description": "空气质量、天气、地震等环境相关数据",
+      "servers": [
+        {
+          "id": "environment",
+          "name": "环境数据服务器",
+          "type": "custom",
+          "path": "mcp/servers/environment/environment",
+          "runtime": "python",
+          "entry": "server.py",
+          "description": "空气质量查询、天气预报、风速、湿度、气温",
+          "api": "Open-Meteo",
+          "auth_required": false,
+          "status": "active"
+        },
+        {
+          "id": "usgs-quakes",
+          "name": "美国地震查询",
+          "type": "third-party",
+          "path": "mcp/servers/environment/usgs-quakes-mcp",
+          "runtime": "node",
+          "entry": "build/index.js",
+          "description": "美国地震数据查询",
+          "api": "USGS Earthquake Hazards",
+          "auth_required": false,
+          "status": "active",
+          "source": "https://github.com/blake365/usgs-quakes-mcp"
+        }
+      ]
+    },
+    "geospatial": {
+      "name": "地理空间",
+      "description": "地理编码、路线规划、POI查询等地理位置相关服务",
+      "servers": [
+        {
+          "id": "geocoding",
+          "name": "地理编码服务",
+          "type": "third-party",
+          "path": "mcp/servers/geospatial/geocoding-mcp",
+          "runtime": "node",
+          "entry": "dist/index.js",
+          "description": "地址/坐标互转（Nominatim）",
+          "api": "Nominatim (OSM)",
+          "auth_required": false,
+          "status": "active",
+          "source": "https://github.com/geocoding-ai/mcp"
+        },
+        {
+          "id": "osm",
+          "name": "OSM路线规划",
+          "type": "third-party",
+          "path": "mcp/servers/geospatial/osm-mcp-server",
+          "runtime": "node",
+          "entry": "index.js",
+          "description": "路线规划、地理编码、距离计算",
+          "api": "OSRM, Nominatim",
+          "auth_required": false,
+          "status": "active",
+          "source": "https://github.com/tpp6me/osm-mcp-server"
+        },
+        {
+          "id": "overpass",
+          "name": "OSM数据查询",
+          "type": "custom",
+          "path": "mcp/servers/geospatial/overpass",
+          "runtime": "python",
+          "entry": "server.py",
+          "description": "查询OSM节点、路径（咖啡馆、道路等）",
+          "api": "Overpass API",
+          "auth_required": false,
+          "status": "active"
+        },
+        {
+          "id": "opentripmap",
+          "name": "旅游POI查询",
+          "type": "custom",
+          "path": "mcp/servers/geospatial/opentripmap",
+          "runtime": "python",
+          "entry": "server.py",
+          "description": "旅游景点POI查询和详情",
+          "api": "OpenTripMap",
+          "auth_required": true,
+          "auth_env": "OPENTRIPMAP_API_KEY",
+          "status": "active"
+        },
+        {
+          "id": "wikidata",
+          "name": "Wikidata查询",
+          "type": "third-party",
+          "path": "mcp/servers/geospatial/wikidata-mcp",
+          "runtime": "python",
+          "entry": "src/wikidata/server.py",
+          "description": "通过SPARQL查询Wikidata",
+          "api": "Wikidata SPARQL",
+          "auth_required": false,
+          "status": "active",
+          "source": "https://github.com/zzaebok/mcp-wikidata"
+        }
+      ]
+    },
+    "urban": {
+      "name": "城市规划",
+      "description": "人口、城市开放数据等城市规划相关服务",
+      "servers": [
+        {
+          "id": "population",
+          "name": "人口查询",
+          "type": "custom",
+          "path": "mcp/servers/urban/population",
+          "runtime": "python",
+          "entry": "server.py",
+          "description": "全球国家人口数据查询",
+          "api": "REST Countries",
+          "auth_required": false,
+          "status": "active"
+        },
+        {
+          "id": "opengov",
+          "name": "城市开放数据",
+          "type": "third-party",
+          "path": "mcp/servers/urban/opengov-mcp",
+          "runtime": "node",
+          "entry": "dist/index.js",
+          "description": "Socrata城市开放数据查询",
+          "api": "Socrata API",
+          "auth_required": false,
+          "status": "active",
+          "source": "https://github.com/srobbin/opengov-mcp-server"
+        }
+      ]
+    },
+    "economic": {
+      "name": "经济数据",
+      "description": "货币汇率、房地产等经济相关数据服务",
+      "servers": [
+        {
+          "id": "exchange-rate",
+          "name": "汇率查询",
+          "type": "custom",
+          "path": "mcp/servers/economic/exchange-rate",
+          "runtime": "python",
+          "entry": "server.py",
+          "description": "货币汇率查询、转换、历史数据",
+          "api": "Frankfurter (ECB)",
+          "auth_required": false,
+          "status": "active"
+        }
+      ]
+    }
+  },
+  "summary": {
+    "total_servers": 9,
+    "custom_servers": 4,
+    "third_party_servers": 5,
+    "requires_auth": 1,
+    "active": 9
+  }
+}

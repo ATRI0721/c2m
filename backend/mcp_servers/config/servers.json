@@ -1,0 +1,65 @@
+{
+  "mcpServers": {
+    "config-admin": {
+      "command": "python",
+      "args": ["mcp_servers/servers/config_admin/server.py"],
+      "description": "配置管理服务器 - 管理Agent和MCP服务器配置（仅限assistant使用）"
+    },
+    "environment": {
+      "command": "python",
+      "args": ["mcp_servers/servers/environment/environment/server.py"],
+      "description": "环境数据服务器 - 空气质量、天气查询"
+    },
+    "usgs-quakes": {
+      "command": "node",
+      "args": ["mcp_servers/servers/environment/usgs-quakes-mcp/build/index.js"],
+      "description": "美国地震数据查询 (USGS API)"
+    },
+    "geocoding": {
+      "command": "node",
+      "args": ["mcp_servers/servers/geospatial/geocoding-mcp/dist/index.js"],
+      "description": "地理编码服务 - 地址/坐标互转 (Nominatim OSM)"
+    },
+    "osm": {
+      "command": "node",
+      "args": ["mcp_servers/servers/geospatial/osm-mcp-server/index.js"],
+      "description": "OSM路线规划 - 路线规划、地理编码、距离计算 (OSRM, Nominatim)"
+    },
+    "overpass": {
+      "command": "python",
+      "args": ["mcp_servers/servers/geospatial/overpass/server.py"],
+      "description": "Overpass OSM数据查询 - 查询OSM节点、路径（咖啡馆、道路等）"
+    },
+    "opentripmap": {
+      "command": "python",
+      "args": ["mcp_servers/servers/geospatial/opentripmap/server.py"],
+      "description": "OpenTripMap旅游POI查询 - 旅游景点POI查询和详情",
+      "env": {
+        "OPENTRIPMAP_API_KEY": "5ae2e3f221c38a28845f05b6b7dd6fe41a62472467e3f9e3a4b50852"
+      }
+    },
+    "wikidata": {
+      "command": "python",
+      "args": ["mcp_servers/servers/geospatial/wikidata-mcp/src/server.py"],
+      "description": "Wikidata查询 - 通过SPARQL查询Wikidata"
+    },
+    "population": {
+      "command": "python",
+      "args": ["mcp_servers/servers/urban/population/server.py"],
+      "description": "人口查询 - 全球国家人口数据查询 (REST Countries API)"
+    },
+    "opengov": {
+      "command": "node",
+      "args": ["mcp_servers/servers/urban/opengov-mcp-server/dist/index.js"],
+      "description": "城市开放数据 - Socrata城市开放数据查询",
+      "env": {
+        "DATA_PORTAL_URL": "https://data.cityofchicago.org"
+      }
+    },
+    "exchange-rate": {
+      "command": "python",
+      "args": ["mcp_servers/servers/economic/exchange-rate/server.py"],
+      "description": "汇率查询 - 货币汇率查询、转换、历史数据 (Frankfurter ECB)"
+    }
+  }
+}

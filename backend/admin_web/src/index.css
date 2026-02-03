@@ -1,0 +1,275 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Deep industrial dark theme with amber accents */
+    --background: 240 5% 8%;
+    --foreground: 240 10% 95%;
+
+    --card: 240 6% 12%;
+    --card-foreground: 240 10% 95%;
+
+    --popover: 240 6% 12%;
+    --popover-foreground: 240 10% 95%;
+
+    /* Sharp amber-orange as primary - distinctive and energetic */
+    --primary: 35 93% 58%;
+    --primary-foreground: 240 5% 8%;
+
+    /* Cool teal for secondary - provides contrast */
+    --secondary: 174 80% 45%;
+    --secondary-foreground: 240 5% 8%;
+
+    --muted: 240 10% 18%;
+    --muted-foreground: 240 8% 60%;
+
+    /* Muted accent for subtle highlights */
+    --accent: 35 93% 58%;
+    --accent-foreground: 240 5% 8%;
+
+    /* Red-orange for destructive actions */
+    --destructive: 15 85% 55%;
+    --destructive-foreground: 240 5% 8%;
+
+    /* Sharp borders for industrial feel */
+    --border: 240 15% 22%;
+    --input: 240 15% 22%;
+    --ring: 35 93% 58%;
+
+    /* Minimal radius for sharp, technical look */
+    --radius: 0.25rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "cv11", "ss01";
+    font-variation-settings: "opsz" 32;
+    /* Subtle noise texture for depth */
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  }
+
+  /* Technical scrollbar */
+  ::-webkit-scrollbar {
+    @apply w-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/40 hover:bg-muted-foreground/60;
+    border-radius: 0;
+  }
+
+  /* Sharp selection */
+  ::selection {
+    @apply bg-primary/30 text-foreground;
+  }
+}
+
+@layer components {
+  /* Technical card style - no blur, sharp borders */
+  .glass {
+    @apply bg-card border border-border/60;
+    box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.05) inset;
+  }
+
+  /* Monospace gradient text for technical feel */
+  .gradient-text {
+    @apply font-mono font-semibold;
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Sharp glow effect */
+  .glow {
+    box-shadow: 0 0 0 1px hsl(var(--border)),
+                0 4px 12px 0 rgba(0, 0, 0, 0.3),
+                0 0 0 1px rgba(0, 0, 0, 0.1) inset;
+  }
+
+  .glow-primary {
+    box-shadow: 0 0 0 1px hsl(var(--primary) / 0.2),
+                0 0 20px 0 hsl(var(--primary) / 0.1);
+  }
+
+  /* Technical status indicators - square, sharp */
+  .status-dot {
+    @apply w-1.5 h-1.5;
+    animation: statusPulse 2s ease-in-out infinite;
+  }
+
+  @keyframes statusPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .status-online {
+    @apply bg-emerald-500;
+  }
+
+  .status-offline {
+    @apply bg-muted-foreground/60;
+  }
+
+  .status-warning {
+    @apply bg-amber-500;
+  }
+
+  /* Technical card hover */
+  .card-hover {
+    @apply transition-all duration-200;
+  }
+
+  .card-hover:hover {
+    @apply -translate-y-0.5;
+    box-shadow: 0 0 0 1px hsl(var(--primary) / 0.3),
+                0 8px 24px 0 rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(0, 0, 0, 0.1) inset;
+  }
+
+  /* Sharp focus ring */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-1 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background;
+  }
+
+  /* Technical grid pattern */
+  .grid-pattern {
+    background-image:
+      linear-gradient(to right, hsl(var(--border) / 0.3) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--border) / 0.3) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  /* Monospace badge for technical details */
+  .mono-badge {
+    @apply font-mono text-xs px-1.5 py-0.5 bg-muted/50 border border-border/60;
+  }
+
+  /* Sharp border accent */
+  .border-accent-l {
+    border-left: 2px solid hsl(var(--primary));
+  }
+
+  .border-accent-t {
+    border-top: 2px solid hsl(var(--primary));
+  }
+
+  /* Section header styling */
+  .section-header {
+    @apply flex items-center gap-3 pb-4 border-b border-border/60 mb-6;
+  }
+
+  .section-title {
+    @apply font-display font-bold text-lg tracking-tight;
+  }
+
+  /* Technical divider */
+  .divider {
+    @apply h-px bg-gradient-to-r from-transparent via-border/60 to-transparent my-6;
+  }
+}
+
+/* Technical animated background */
+.animated-bg {
+  background:
+    linear-gradient(135deg, hsl(var(--background)), hsl(240, 8%, 12%)),
+    linear-gradient(to bottom, transparent 95%, hsl(var(--primary) / 0.02) 100%);
+  background-size: 100% 100%, 100% 4px;
+  animation: none;
+}
+
+/* Scanline effect for tech feel */
+.scanline {
+  position: relative;
+  overflow: hidden;
+}
+
+.scanline::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(to right, transparent, hsl(var(--primary) / 0.3), transparent);
+  animation: scanline 8s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-2px); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: translateY(600px); opacity: 0; }
+}
+
+/* Monospace decorative elements */
+.mono-label {
+  @apply font-mono text-xs uppercase tracking-wider text-muted-foreground/80;
+}
+
+/* Code block styling */
+.code-block {
+  @apply font-mono text-sm bg-black/30 border border-border/60 p-3;
+}
+
+/* Custom scrollbar for tools dialog */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted-foreground) / 0.4) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/40 rounded-full hover:bg-muted-foreground/60;
+}
+
+/* Tool Call Card Animations */
+.tool-call-pulse {
+  animation: toolCallPulse 2s ease-in-out infinite;
+}
+
+@keyframes toolCallPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.05);
+  }
+}
+
+/* Tool call entry animation */
+.tool-call-enter {
+  animation: toolCallEnter 0.3s ease-out forwards;
+}
+
+@keyframes toolCallEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

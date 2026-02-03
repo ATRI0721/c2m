@@ -1,0 +1,24 @@
+fastapi==0.123.0
+uvicorn==0.38.0
+sqlmodel==0.0.27
+pydantic==2.12.5
+pydantic-settings==2.12.0
+PyJWT==2.10.1
+passlib==1.7.4
+bcrypt==4.0.1
+openai==2.8.1
+python-dotenv==1.2.1
+
+# MCP Python SDK
+mcp>=0.9.0
+
+# Logging
+python-json-logger==2.0.7
+
+# Testing
+pytest==8.3.4
+pytest-asyncio==0.24.0
+pytest-mock==3.14.0
+httpx==0.28.1
+faker==30.8.0
+freezegun==1.5.1
