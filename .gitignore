@@ -105,4 +105,6 @@ mcp_servers/node_modules/
 # Excel files (project specific)
 城市计算调研.xlsx
 
+.claude/
+
 !.gitkeep

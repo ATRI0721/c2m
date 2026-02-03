@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Shield, Check, X, RefreshCw, AlertTriangle, Terminal } from 'lucide-react';
 import { WhitelistResponse } from '@/types';
-import { localWhitelistApi } from '@/lib/localApi';
+import { localWhitelistApi } from '@/api/localApi';
 
 export function WhitelistManager() {
   const [whitelistData, setWhitelistData] = useState<WhitelistResponse | null>(null);

@@ -1,5 +1,5 @@
 import { LayoutDashboard, Server, Bot, Sparkles, Settings, LogOut } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/api/utils';
 
 interface SidebarProps {
   activeTab: string;

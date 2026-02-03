@@ -1,6 +1,6 @@
 import { CheckCircle2, XCircle, Wrench, ChevronDown, ChevronUp, Clock } from 'lucide-react';
 import { useState } from 'react';
-import { parseToolResult } from '@/lib/toolResultParser';
+import { parseToolResult } from '@/api/toolResultParser';
 
 interface ToolCallCardProps {
   toolId: string;
@@ -139,18 +139,23 @@ export function ToolCallCard({
           {/* Result Section */}
           {parsedResult && (
             <div>
-              <div className="mono-label text-[10px] text-muted-foreground mb-2">
-                // RESULT
+              <div className="mono-label text-[10px] text-muted-foreground mb-2 flex items-center justify-between">
+                <span>// RESULT</span>
+                <span className="text-[9px] text-muted-foreground/60">
+                  {parsedResult.formatted.length} chars
+                </span>
               </div>
-              <pre
-                className={`text-xs font-mono p-2 border max-h-60 overflow-y-auto ${
+              <div
+                className={`text-xs font-mono p-3 border ${
                   error
                     ? 'bg-rose-500/5 border-rose-500/20 text-rose-300/90'
                     : 'bg-emerald-500/5 border-emerald-500/20 text-emerald-300/90'
-                } rounded overflow-x-auto whitespace-pre-wrap`}
+                } rounded`}
               >
-                {parsedResult.formatted}
-              </pre>
+                <pre className="max-h-96 overflow-y-auto overflow-x-auto whitespace-pre-wrap break-words leading-relaxed">
+                  {parsedResult.formatted}
+                </pre>
+              </div>
             </div>
           )}
         </div>

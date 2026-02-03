@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Dashboard } from './pages/Dashboard';
-import { authService } from './lib/auth';
+import { authService } from './api/auth';
 import './index.css';
 
 const queryClient = new QueryClient({

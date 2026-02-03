@@ -6,6 +6,9 @@ export interface MCPServer {
   tools: MCPTool[];
   command: string;
   args: string[];
+  enabled?: boolean;  // For local API only
+  tools_count?: number;  // For local API only
+  env?: Record<string, string>;  // For local API only
 }
 
 export interface MCPTool {
@@ -15,24 +18,18 @@ export interface MCPTool {
   description: string;
 }
 
-export interface MCPServersResponse {
-  servers: Record<string, MCPServer>;
-  total_servers: number;
-  total_tools: number;
-}
+// MCP servers list is returned as an array directly
+export type MCPServersResponse = MCPServer[];
 
-export interface MCPToolsResponse {
-  tools: MCPTool[];
-  total: number;
-}
+// Removed - this endpoint doesn't exist in API.md
+// Use mcpApi.getServer(name) instead to get tools for a specific server
 
 export interface Agent {
   name: string;
   description: string;
   model: string;
   mcp_services: string[];
-  enable_tool_calling: boolean;
-  system_prompt?: string;
+  system_prompt?: string;  // Only included in detailed agent response
 }
 
 export interface AgentsResponse {

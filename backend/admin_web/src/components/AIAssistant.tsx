@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Send, Sparkles, Loader2, Plus, MessageSquare, Trash2, RefreshCw } from 'lucide-react';
-import { conversationApi, Conversation } from '@/lib/api';
+import { conversationApi, Conversation } from '@/api/api';
 import { ToolCallCard } from '@/components/ToolCallCard';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -69,10 +69,54 @@ export function AIAssistant() {
     setIsLoading(true);
     try {
       const messagesData = await conversationApi.getMessages(conversation.id);
-      setMessages(messagesData.map(m => ({
-        role: m.role as 'user' | 'assistant',
-        segments: [{ type: 'content' as const, content: m.content }]
-      })));
+      const messages: Message[] = [];
+
+      for (const msg of messagesData) {
+        // 跳过系统消息
+        if (msg.role === 'system') continue;
+
+        const role = msg.role as 'user' | 'assistant';
+
+        // 工具调用消息：添加到上一条 assistant 消息或创建新消息
+        if (msg.message_type === 'tool_call' && msg.tool_call_id && msg.tool_name) {
+          const toolCallSegment: MessageSegment & { type: 'tool_call' } = {
+            type: 'tool_call',
+            toolId: msg.tool_call_id,
+            toolName: msg.tool_name,
+            arguments: msg.tool_arguments ? JSON.parse(msg.tool_arguments) : {},
+            startTime: 0,
+            status: msg.tool_error ? 'failed' : 'completed',
+            result: msg.content || undefined,
+            error: msg.tool_error,
+          };
+
+          // 添加到上一条 assistant 消息或创建新消息
+          const lastMsg = messages[messages.length - 1];
+          if (lastMsg?.role === 'assistant') {
+            lastMsg.segments.push(toolCallSegment);
+          } else {
+            messages.push({ role: 'assistant', segments: [toolCallSegment] });
+          }
+        }
+        // 普通消息：移除工具调用占位符
+        else if (msg.message_type === 'message' && msg.content) {
+          const cleanContent = msg.content.replace(/\[TOOL_CALL:[a-zA-Z0-9_-]+\]/g, '').trim();
+
+          // 合并到上一条同角色消息
+          const lastMsg = messages[messages.length - 1];
+          if (lastMsg?.role === role) {
+            if (cleanContent) {
+              lastMsg.segments.push({ type: 'content', content: cleanContent });
+            }
+          } else if (cleanContent) {
+            messages.push({ role, segments: [{ type: 'content', content: cleanContent }] });
+          }
+        }
+      }
+
+      setMessages(messages.length > 0 ? messages : [
+        { role: 'assistant', segments: [{ type: 'content', content: '你好！我是 Code2MCP 配置助手，可以帮助您：\n\n• 配置和管理 MCP 服务\n• 创建和优化 Agent\n• 解答系统配置问题\n• 诊断配置错误\n\n请问有什么我可以帮助您的吗？' }] }
+      ]);
       setCurrentConversation(conversation);
       setShowConversationList(false);
     } catch (error) {
@@ -119,7 +163,7 @@ export function AIAssistant() {
       }
 
       // 调用后端AI助手API
-      const response = await fetch('/api/v1/chat/assistant/chat', {
+      const response = await fetch('/api/v1/agent/assistant/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

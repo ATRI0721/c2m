@@ -5,7 +5,8 @@ import { WhitelistManager } from '@/components/WhitelistManager';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MCPServersResponse, AgentsResponse } from '@/types';
 import { useQuery } from '@tanstack/react-query';
-import { localMcpApi, localAgentApi } from '@/lib/localApi';
+import { mcpApi } from '@/api/api';
+import { localMcpApi, localAgentApi } from '@/api/localApi';
 import { AgentForm } from '@/components/AgentForm';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -19,24 +20,29 @@ export function Dashboard({ isAuthenticated = false }: { isAuthenticated?: boole
   const { data: mcpData, refetch: refetchMcp, isLoading: mcpLoading } = useQuery<MCPServersResponse>({
     queryKey: ['mcp-servers'],
     queryFn: async () => {
-      const data = await localMcpApi.getServers();
-      // Also fetch tools to get accurate count and populate tools array
-      const toolsData = await localMcpApi.getTools();
+      // 从后端 API 获取真实的 MCP 服务器列表（包含 tools 信息）
+      const backendServers = await mcpApi.getServers();
+      // 从本地 API 获取配置数据
+      const localConfig = await localMcpApi.getServers();
 
-      // Update each server's tools count and tools array
-      if (data.servers && toolsData.tools) {
-        Object.keys(data.servers).forEach(serverName => {
-          // Filter tools that belong to this server
-          const serverTools = toolsData.tools.filter(
-            tool => tool.server_name === serverName
-          );
-          data.servers[serverName].tools = serverTools;
-          data.servers[serverName].tools_count = serverTools.length;
-        });
-      }
-      // Update total tools count
-      data.total_tools = toolsData.total || 0;
-      return data;
+      // 合并数据：后端数据为主，本地配置为辅
+      const servers: any = {};
+      let totalTools = 0;
+
+      // 使用后端返回的服务器数据（包含真实的 tools 信息）
+      backendServers.forEach((server: any) => {
+        servers[server.name] = {
+          ...server,
+          enabled: localConfig.servers?.[server.name]?.enabled ?? true,
+        };
+        totalTools += server.tools?.length || 0;
+      });
+
+      return {
+        servers,
+        total_servers: Object.keys(servers).length,
+        total_tools: totalTools,
+      };
     },
   });
 
