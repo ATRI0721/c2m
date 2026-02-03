@@ -29,7 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (token) {
       try {
         const userData = await api.verifyToken();
-        setUser(userData);
+        setUser(userData.user);
       } catch {
         // Token is invalid, clear it
         api.setToken(null);
@@ -61,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshUser = async () => {
     const userData = await api.verifyToken();
-    setUser(userData);
+    setUser(userData.user);
   };
 
   return (
