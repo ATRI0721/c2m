@@ -1,0 +1,102 @@
+services:
+  # Backend Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: code2mcp-backend
+    ports:
+      - "8000:8000"
+    environment:
+      # Database
+      - DATABASE_URL=sqlite:///./data/app.db
+
+      # Security (REQUIRED - Change these values!)
+      - SECRET_KEY=${SECRET_KEY:-change-this-secret-key-in-production}
+
+      # OpenAI/AI Model Configuration
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-https://api.openai.com/v1}
+      - DEFAULT_MODEL=${DEFAULT_MODEL:-gpt-4o-mini}
+
+      # Frontend URL
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost,http://localhost:80,http://localhost:5173,http://localhost:5174}
+
+      # Admin Configuration
+      - ADMIN_EMAILS=${ADMIN_EMAILS:-["Admin@localhost"]}
+
+      # Public Access Lists
+      - PUBLIC_AGENTS=${PUBLIC_AGENTS:-["chat", "city", "weather", "code"]}
+      - PUBLIC_MCP_SERVERS=${PUBLIC_MCP_SERVERS:-["environment", "usgs-quakes", "geocoding", "osm", "overpass", "opentripmap", "wikidata", "population", "opengov", "exchange-rate"]}
+      - ADMIN_AGENTS=${ADMIN_AGENTS:-["assistant"]}
+
+      # MCP Configuration
+      - MCP_SKIP_SERVERS=${MCP_SKIP_SERVERS:-[]}
+
+      # Logging
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      # Persist database
+      - backend-data:/app/data
+      # Mount MCP servers config for development (optional)
+      - ./backend/mcp_servers/config:/app/mcp_servers/config:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - code2mcp-network
+
+  # Frontend Build Service (produces static files)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: production
+    container_name: code2mcp-frontend
+    restart: unless-stopped
+    volumes:
+      # Share static files with nginx
+      - frontend-static:/app/dist:ro
+    networks:
+      - code2mcp-network
+
+  # Nginx Reverse Proxy
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: code2mcp-nginx
+    ports:
+      - "80:80"
+    volumes:
+      # Mount static files from frontend
+      - frontend-static:/usr/share/nginx/html:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_started
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - code2mcp-network
+
+networks:
+  code2mcp-network:
+    driver: bridge
+
+volumes:
+  backend-data:
+    driver: local
+  frontend-static:
+    driver: local

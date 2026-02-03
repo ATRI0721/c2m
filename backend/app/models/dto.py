@@ -18,23 +18,23 @@ class ToolCallDTO(SQLModel):
     mcp_server: str | None
 
     # 参数和结果
-    arguments: dict
-    result: dict | None
+    arguments: dict = {}
+    result: dict | None = None
 
     # 执行元数据
-    status: str
-    started_at: datetime | None
-    completed_at: datetime | None
-    duration_ms: int | None
+    status: str = "pending"
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    duration_ms: int | None = None
 
     # 错误信息
-    error: bool
-    error_message: str | None
-    error_type: str | None
+    error: bool = False
+    error_message: str | None = None
+    error_type: str | None = None
 
     # 重试信息
-    retry_count: int
-    max_retries: int
+    retry_count: int = 0
+    max_retries: int = 3
 
     @classmethod
     def from_orm(cls, tc: ToolCall) -> "ToolCallDTO":
@@ -46,17 +46,17 @@ class ToolCallDTO(SQLModel):
             tool_call_id=tc.tool_call_id,
             tool_name=tc.tool_name,
             mcp_server=tc.mcp_server,
-            arguments=tc.arguments,
+            arguments=tc.arguments or {},
             result=tc.result,
-            status=tc.status,
+            status=tc.status or "pending",
             started_at=tc.started_at,
             completed_at=tc.completed_at,
             duration_ms=tc.duration_ms,
-            error=tc.error,
+            error=tc.error if tc.error is not None else False,
             error_message=tc.error_message,
             error_type=tc.error_type,
-            retry_count=tc.retry_count,
-            max_retries=tc.max_retries,
+            retry_count=tc.retry_count if tc.retry_count is not None else 0,
+            max_retries=tc.max_retries if tc.max_retries is not None else 3,
         )
 
 

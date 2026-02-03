@@ -65,17 +65,31 @@ export default function ChatMessage({ message, streamingEvents = [] }: ChatMessa
     toolCallStatuses,
   });
 
+  // Build content for display
+  const displayContent = message.content || '';
+
   // During streaming, build a mixed content list with both text and tool calls
   // This preserves the order of content and tool calls
   const streamingContentParts = useMemo(() => {
-    if (!isStreaming) return [];
+    // Use streaming events if streaming or if there are streaming events but no actual content yet
+    // This prevents flicker when stream ends
+    const shouldUseStreamEvents = isStreaming || (streamingEvents.length > 0 && !displayContent);
+
+    if (!shouldUseStreamEvents) return [];
 
     const parts: Array<string | { type: 'tool_call'; id: string }> = [];
+    let textBuffer = '';
 
     for (const event of streamingEvents) {
       if (event.type === 'content') {
-        parts.push(event.content);
+        // Accumulate text content to avoid creating multiple paragraphs
+        textBuffer += event.content;
       } else if (event.type === 'tool_call') {
+        // Flush text buffer before adding tool call
+        if (textBuffer) {
+          parts.push(textBuffer);
+          textBuffer = '';
+        }
         const toolCallEvent = event as Extract<SSEEvent, { type: 'tool_call' }>;
         let toolName = toolCallEvent.tool || toolCallEvent.tool_call_id || '';
         // Generate a friendly tool name if needed
@@ -87,16 +101,13 @@ export default function ChatMessage({ message, streamingEvents = [] }: ChatMessa
       }
     }
 
+    // Flush remaining text buffer
+    if (textBuffer) {
+      parts.push(textBuffer);
+    }
+
     return parts;
-  }, [streamingEvents, isStreaming]);
-
-  // Build content for display
-  let displayContent = message.content || '';
-
-  // For non-streaming messages, filter out any tool call markers
-  if (!isStreaming) {
-    displayContent = displayContent.replace(/\s*\[TOOL_CALL:[^\]]+\]\s*/g, ' ').trim();
-  }
+  }, [streamingEvents, isStreaming, displayContent]);
 
   if (isSystem) {
     return null;
@@ -143,7 +154,10 @@ export default function ChatMessage({ message, streamingEvents = [] }: ChatMessa
     td: ({ children }: { children?: React.ReactNode }) => <td className="px-4 py-2">{children}</td>,
   };
 
-  const hasContent = displayContent.length > 0 || hasToolCall;
+  // Check if there's content to display
+  // For streaming messages, check streamingContentParts; for loaded messages, check displayContent
+  const hasStreamContent = isStreaming && streamingContentParts.length > 0;
+  const hasContent = hasStreamContent || displayContent.length > 0 || hasToolCall;
 
   // 渲染包含工具调用的内容
   const renderContentWithToolCalls = (content: string, useMarkdown: boolean) => {
@@ -182,40 +196,48 @@ export default function ChatMessage({ message, streamingEvents = [] }: ChatMessa
       );
     }
 
-    // Non-streaming mode with tool call from backend
-    // Display tool call indicator for messages loaded from backend
-    if (!isStreaming && hasToolCall) {
-      const toolName = message.tool_name || '工具调用';
-      const status: ToolCallStatus = message.tool_error ? 'error' : 'success';
+    // Non-streaming mode: parse tool call placeholders from backend messages
+    const parts = parseToolCalls(content);
 
+    // If we found tool call markers in the content, render them with icons
+    if (parts.length > 1 || (parts.length === 1 && typeof parts[0] !== 'string')) {
       return (
-        <div className="flex items-center gap-2">
-          <ToolCallIndicator
-            toolCallId={toolName}
-            status={status}
-            animating={false}
-          />
-          {content && (
-            <div className="flex-1 text-sm leading-relaxed markdown-content">
-              {useMarkdown ? (
+        <div className="space-y-3">
+          {parts.map((part, index) => {
+            if (typeof part === 'string') {
+              if (!part.trim()) return null;
+              return useMarkdown ? (
                 <ReactMarkdown
+                  key={index}
                   remarkPlugins={[remarkGfm]}
                   rehypePlugins={[rehypeHighlight]}
                   components={markdownComponents}
                 >
-                  {content}
+                  {part}
                 </ReactMarkdown>
               ) : (
-                <p className="whitespace-pre-wrap break-words">{content}</p>
-              )}
-            </div>
-          )}
+                <p key={index} className="whitespace-pre-wrap break-words">{part}</p>
+              );
+            } else {
+              // For loaded messages, show success/error status based on message metadata
+              // Since we don't have individual tool status, default to success
+              const status: ToolCallStatus = 'success';
+              return (
+                <ToolCallIndicator
+                  key={index}
+                  toolCallId={part.id}
+                  status={status}
+                  animating={false}
+                />
+              );
+            }
+          })}
         </div>
       );
     }
 
     // Non-streaming mode - just render the content as markdown
-    // Tool call markers have already been filtered out
+    // No tool call markers found
     return useMarkdown ? (
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
@@ -265,7 +287,7 @@ export default function ChatMessage({ message, streamingEvents = [] }: ChatMessa
         >
           {hasContent ? (
             <div className="text-sm leading-relaxed markdown-content">
-              {displayContent ? renderContentWithToolCalls(displayContent, !isUser) : null}
+              {renderContentWithToolCalls(displayContent, !isUser)}
             </div>
           ) : (
             <div className="flex items-center gap-2">

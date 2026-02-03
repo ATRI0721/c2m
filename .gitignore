@@ -21,12 +21,14 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+.claude/
 
 # Virtual Environment
 venv/
 ENV/
 env/
 .venv
+admin_web/
 
 # Testing
 .pytest_cache/

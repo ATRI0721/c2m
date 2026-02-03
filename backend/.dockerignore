@@ -1,0 +1,72 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info
+dist
+build
+.eggs
+.pytest_cache
+.coverage
+htmlcov
+.tox
+.hypothesis
+.mypy_cache
+.dmypy.json
+dmypy.json
+
+# Virtual environments
+venv
+env
+ENV
+env.bak
+venv.bak
+
+# IDEs
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Admin web frontend (not needed for backend container)
+admin_web/node_modules
+admin_web/dist
+admin_web/.cache
+
+# Data directories (will be mounted as volumes)
+data/*.db
+data/*.db-journal
+data/logs/*
+
+# Test files
+tests/
+test_*.py
+pytest.ini
+.pytest_cache
+
+# Documentation
+*.md
+!README.md
+
+# Claude settings
+.claude
+
+# MCP servers subdirectories with node_modules
+mcp_servers/**/node_modules
+mcp_servers/**/dist
+mcp_servers/**/.cache
+
+# Temporary files
+*.tmp
+*.log
+.env.local
+.env.*.local

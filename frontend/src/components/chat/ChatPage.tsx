@@ -177,21 +177,24 @@ export default function ChatPage() {
         if (event.type === 'content') {
           assistantContent += event.content;
         } else if (event.type === 'tool_call') {
-          // Tool call event - just track it, the content will show tool usage
-          console.log('[Chat] Tool call:', event.tool, event.args);
+          // Tool call event - insert placeholder into content for database storage
+          const toolCallEvent = event as Extract<SSEEvent, { type: 'tool_call' }>;
+          const toolId = toolCallEvent.tool || toolCallEvent.tool_call_id || '';
+          // Format: [TOOL_CALL:tool_id]
+          assistantContent += `\n[TOOL_CALL:${toolId}]\n`;
+          console.log('[Chat] Tool call:', toolId, toolCallEvent.args);
         }
       }
 
       console.log('[Chat] Stream completed. Content length:', assistantContent.length);
 
       // Create assistant message from streamed content
-      // Filter out any tool call markers that might have been added
-      const cleanContent = assistantContent.replace(/\s*\[TOOL_CALL:[^\]]+\]\s*/g, ' ').trim();
-      if (cleanContent) {
+      // Keep tool call placeholders in the content for proper display when loaded from backend
+      if (assistantContent) {
         const assistantMessage: Message = {
           id: Date.now().toString() + '_assistant',
           role: 'assistant',
-          content: cleanContent,
+          content: assistantContent,
           created_at: new Date().toISOString(),
           conversation_id: currentConvId,
           message_type: 'message',
