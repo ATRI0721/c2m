@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { api } from '../../lib/api';
+import { api } from '../../api/api';
 import type { Agent, Message, Conversation, MCPServer, SSEEvent } from '../../types/api';
 import AgentSelector from './AgentSelector';
 import MCPPanel from './MCPPanel';
