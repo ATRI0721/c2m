@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Badge } from '@/components/ui/badge';
 import { Plus, Upload, Wrench, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { localMcpApi } from '@/lib/localApi';
+import { localMcpApi } from '@/api/localApi';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
