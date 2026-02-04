@@ -39,7 +39,7 @@ cd code2mcp
 
 ```bash
 # 复制环境变量示例文件
-cp .env.example .env
+cp env.example .env
 
 # 编辑 .env 文件，设置必要的配置
 # 至少需要配置:
@@ -119,7 +119,7 @@ Code2MCP 采用以下三层架构：
 | `DATABASE_URL` | 数据库连接URL | `sqlite:///./data/app.db` |
 | `LOG_LEVEL` | 日志级别 | `INFO` |
 
-完整配置选项请参考 [`.env.example`](.env.example) 文件。
+完整配置选项请参考 [`env.example`](env.example) 文件。
 
 ## 服务说明
 

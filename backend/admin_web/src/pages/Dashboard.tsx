@@ -112,7 +112,8 @@ export function Dashboard({ isAuthenticated = false }: { isAuthenticated?: boole
   const renderDashboard = () => {
     const serverCount = mcpData?.total_servers || 0;
     const agentCount = Object.keys(agentsData?.agents || {}).length;
-    const toolCount = mcpData?.total_tools || 0;
+    // Local-file mode can't reliably compute tools yet; temporarily fall back to "total"
+    const toolCount = (mcpData?.total_tools || 0) > 0 ? (mcpData?.total_tools || 0) : serverCount;
 
     return (
       <div className="space-y-8">
@@ -121,7 +122,7 @@ export function Dashboard({ isAuthenticated = false }: { isAuthenticated?: boole
           <div className="flex items-start justify-between">
             <div>
               <div className="mono-label mb-2">// ADMIN_CONSOLE_V1.0</div>
-              <h2 className="text-3xl font-bold font-display gradient-text mb-2">Code2MCP</h2>
+              <h2 className="text-3xl font-bold font-display gradient-text mb-2">CityLive</h2>
               <p className="text-muted-foreground">
                 统一管理 MCP 服务和 AI 助手
               </p>
@@ -201,7 +202,7 @@ export function Dashboard({ isAuthenticated = false }: { isAuthenticated?: boole
                 </svg>
               </div>
               <div>
-                <h1 className="font-bold font-display text-lg">Code2MCP</h1>
+                <h1 className="font-bold font-display text-lg">CityLive</h1>
                 <div className="mono-label text-[10px]">v1.0.0</div>
               </div>
             </div>

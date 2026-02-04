@@ -4,6 +4,8 @@ export interface MCPServer {
   description: string;
   running: boolean;
   tools: MCPTool[];
+  tools_count: number;
+  enabled: boolean;
   command: string;
   args: string[];
   enabled?: boolean;  // For local API only

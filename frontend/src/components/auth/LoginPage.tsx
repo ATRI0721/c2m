@@ -74,7 +74,7 @@ export default function LoginPage() {
         {/* Logo/Brand */}
         <div className="text-center mb-8">
           <h1 className="font-display text-4xl font-bold text-gray-900 mb-2">
-            Code2MCP
+            CityLive
           </h1>
           <p className="text-gray-500">智能对话 · MCP 工具集成</p>
         </div>

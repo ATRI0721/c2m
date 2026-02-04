@@ -44,7 +44,7 @@ export function LoginPage() {
             </div>
           </div>
           <div>
-            <CardTitle className="text-3xl font-display gradient-text">Code2MCP</CardTitle>
+            <CardTitle className="text-3xl font-display gradient-text">CityLive</CardTitle>
             <CardDescription className="text-base mt-2">管理控制台登录</CardDescription>
           </div>
         </CardHeader>

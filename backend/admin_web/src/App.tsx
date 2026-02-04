@@ -25,7 +25,7 @@ function LoadingScreen() {
           </svg>
         </div>
         <div className="space-y-2">
-          <h2 className="text-2xl font-display gradient-text">Code2MCP</h2>
+          <h2 className="text-2xl font-display gradient-text">CityLive</h2>
           <p className="text-muted-foreground">正在连接管理控制台...</p>
         </div>
       </div>

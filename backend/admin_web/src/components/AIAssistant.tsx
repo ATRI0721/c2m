@@ -57,7 +57,7 @@ export function AIAssistant() {
       setConversations(prev => [newConv, ...prev]);
       setCurrentConversation(newConv);
       setMessages([
-        { role: 'assistant', segments: [{ type: 'content', content: '你好！我是 Code2MCP 配置助手，可以帮助您：\n\n• 配置和管理 MCP 服务\n• 创建和优化 Agent\n• 解答系统配置问题\n• 诊断配置错误\n\n请问有什么我可以帮助您的吗？' }] }
+        { role: 'assistant', segments: [{ type: 'content', content: '你好！我是 CityLive 配置助手，可以帮助您：\n\n• 配置和管理 MCP 服务\n• 创建和优化 Agent\n• 解答系统配置问题\n• 诊断配置错误\n\n请问有什么我可以帮助您的吗？' }] }
       ]);
     } catch (error) {
       console.error('Failed to create conversation:', error);
@@ -136,7 +136,7 @@ export function AIAssistant() {
       if (currentConversation?.id === conversationId) {
         setCurrentConversation(null);
         setMessages([
-          { role: 'assistant', segments: [{ type: 'content', content: '你好！我是 Code2MCP 配置助手，可以帮助您：\n\n• 配置和管理 MCP 服务\n• 创建和优化 Agent\n• 解答系统配置问题\n• 诊断配置错误\n\n请问有什么我可以帮助您的吗？' }] }
+          { role: 'assistant', segments: [{ type: 'content', content: '你好！我是 CityLive 配置助手，可以帮助您：\n\n• 配置和管理 MCP 服务\n• 创建和优化 Agent\n• 解答系统配置问题\n• 诊断配置错误\n\n请问有什么我可以帮助您的吗？' }] }
         ]);
       }
     } catch (error) {
@@ -309,7 +309,7 @@ export function AIAssistant() {
   useEffect(() => {
     if (messages.length === 0) {
       setMessages([
-        { role: 'assistant', segments: [{ type: 'content', content: '你好！我是 Code2MCP 配置助手，可以帮助您：\n\n• 配置和管理 MCP 服务\n• 创建和优化 Agent\n• 解答系统配置问题\n• 诊断配置错误\n\n请问有什么我可以帮助您的吗？' }] }
+        { role: 'assistant', segments: [{ type: 'content', content: '你好！我是 CityLive 配置助手，可以帮助您：\n\n• 配置和管理 MCP 服务\n• 创建和优化 Agent\n• 解答系统配置问题\n• 诊断配置错误\n\n请问有什么我可以帮助您的吗？' }] }
       ]);
     }
   }, []);

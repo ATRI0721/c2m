@@ -24,7 +24,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
             <Sparkles className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h1 className="font-bold font-display text-lg gradient-text">Code2MCP</h1>
+            <h1 className="font-bold font-display text-lg gradient-text">CityLive</h1>
             <p className="text-xs text-muted-foreground">管理控制台</p>
           </div>
         </div>

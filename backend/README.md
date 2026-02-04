@@ -118,7 +118,7 @@ pip install -r requirements.txt
 ### 2. 配置环境变量
 
 ```bash
-cp .env.example .env
+cp env.example .env
 # 编辑 .env 文件,配置 OPENAI_API_KEY 等参数
 ```
 

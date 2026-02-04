@@ -6,6 +6,45 @@
 
 @layer base {
   :root {
+    /* Light "clean tech" theme (default) */
+    --background: 220 33% 98%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    /* Slightly deeper amber for good contrast on white */
+    --primary: 35 93% 52%;
+    --primary-foreground: 222 47% 11%;
+
+    /* Deeper teal to stay readable on light backgrounds */
+    --secondary: 174 72% 36%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 220 20% 95%;
+    --muted-foreground: 215 16% 45%;
+
+    /* Muted accent for subtle highlights */
+    --accent: 35 93% 52%;
+    --accent-foreground: 222 47% 11%;
+
+    /* Red for destructive actions */
+    --destructive: 0 74% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 14% 88%;
+    --input: 220 14% 88%;
+    --ring: 35 93% 52%;
+
+    /* Minimal radius for sharp, technical look */
+    --radius: 0.25rem;
+  }
+
+  /* Optional dark theme (toggle by adding class="dark" on <html>) */
+  .dark {
     /* Deep industrial dark theme with amber accents */
     --background: 240 5% 8%;
     --foreground: 240 10% 95%;
@@ -39,9 +78,6 @@
     --border: 240 15% 22%;
     --input: 240 15% 22%;
     --ring: 35 93% 58%;
-
-    /* Minimal radius for sharp, technical look */
-    --radius: 0.25rem;
   }
 }
 
@@ -55,7 +91,7 @@
     font-feature-settings: "cv11", "ss01";
     font-variation-settings: "opsz" 32;
     /* Subtle noise texture for depth */
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.02'/%3E%3C/svg%3E");
   }
 
   /* Technical scrollbar */
@@ -81,24 +117,24 @@
 @layer components {
   /* Technical card style - no blur, sharp borders */
   .glass {
-    @apply bg-card border border-border/60;
-    box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.05) inset;
+    @apply bg-card/80 border border-border/70;
+    box-shadow:
+      0 1px 0 0 rgba(255, 255, 255, 0.6) inset,
+      0 10px 30px 0 rgba(15, 23, 42, 0.06);
   }
 
   /* Monospace gradient text for technical feel */
   .gradient-text {
-    @apply font-mono font-semibold;
-    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+    /* User-facing: solid color (no rainbow / no gradient) */
+    @apply font-semibold text-foreground;
   }
 
   /* Sharp glow effect */
   .glow {
-    box-shadow: 0 0 0 1px hsl(var(--border)),
-                0 4px 12px 0 rgba(0, 0, 0, 0.3),
-                0 0 0 1px rgba(0, 0, 0, 0.1) inset;
+    box-shadow:
+      0 0 0 1px hsl(var(--border)),
+      0 14px 40px 0 rgba(15, 23, 42, 0.08),
+      0 0 0 1px rgba(255, 255, 255, 0.4) inset;
   }
 
   .glow-primary {
@@ -136,9 +172,10 @@
 
   .card-hover:hover {
     @apply -translate-y-0.5;
-    box-shadow: 0 0 0 1px hsl(var(--primary) / 0.3),
-                0 8px 24px 0 rgba(0, 0, 0, 0.4),
-                0 0 0 1px rgba(0, 0, 0, 0.1) inset;
+    box-shadow:
+      0 0 0 1px hsl(var(--primary) / 0.25),
+      0 20px 50px 0 rgba(15, 23, 42, 0.10),
+      0 0 0 1px rgba(255, 255, 255, 0.5) inset;
   }
 
   /* Sharp focus ring */
@@ -149,8 +186,8 @@
   /* Technical grid pattern */
   .grid-pattern {
     background-image:
-      linear-gradient(to right, hsl(var(--border) / 0.3) 1px, transparent 1px),
-      linear-gradient(to bottom, hsl(var(--border) / 0.3) 1px, transparent 1px);
+      linear-gradient(to right, hsl(var(--border) / 0.35) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--border) / 0.35) 1px, transparent 1px);
     background-size: 32px 32px;
   }
 
@@ -186,9 +223,10 @@
 /* Technical animated background */
 .animated-bg {
   background:
-    linear-gradient(135deg, hsl(var(--background)), hsl(240, 8%, 12%)),
-    linear-gradient(to bottom, transparent 95%, hsl(var(--primary) / 0.02) 100%);
-  background-size: 100% 100%, 100% 4px;
+    radial-gradient(1200px circle at 15% 10%, hsl(var(--primary) / 0.10), transparent 55%),
+    radial-gradient(900px circle at 85% 20%, hsl(var(--secondary) / 0.10), transparent 55%),
+    linear-gradient(180deg, hsl(var(--background)), hsl(220 40% 96%));
+  background-size: 100% 100%, 100% 100%, 100% 100%;
   animation: none;
 }
 
@@ -223,7 +261,7 @@
 
 /* Code block styling */
 .code-block {
-  @apply font-mono text-sm bg-black/30 border border-border/60 p-3;
+  @apply font-mono text-sm bg-muted/60 border border-border/70 p-3 text-foreground/80;
 }
 
 /* Custom scrollbar for tools dialog */
