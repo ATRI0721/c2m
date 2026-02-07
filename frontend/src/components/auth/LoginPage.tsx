@@ -17,7 +17,7 @@ export default function LoginPage() {
 
   const handleSendCode = async () => {
     if (!email) {
-      setError('请输入邮箱地址');
+      setError('Please enter email address');
       return;
     }
 
@@ -27,7 +27,7 @@ export default function LoginPage() {
       await api.sendVerificationCode('reset', { email });
       setCodeSent(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '发送验证码失败');
+      setError(err instanceof Error ? err.message : 'Failed to send verification code');
     } finally {
       setIsLoading(false);
     }
@@ -38,17 +38,17 @@ export default function LoginPage() {
     setError('');
 
     if (!email) {
-      setError('请输入邮箱地址');
+      setError('Please enter email address');
       return;
     }
 
     if (loginMethod === 'password' && !password) {
-      setError('请输入密码');
+      setError('Please enter password');
       return;
     }
 
     if (loginMethod === 'code' && !verificationCode) {
-      setError('请输入验证码');
+      setError('Please enter verification code');
       return;
     }
 
@@ -62,7 +62,7 @@ export default function LoginPage() {
       }
       navigate('/chat');
     } catch (err) {
-      setError(err instanceof Error ? err.message : '登录失败');
+      setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
       setIsLoading(false);
     }
@@ -76,13 +76,13 @@ export default function LoginPage() {
           <h1 className="font-display text-4xl font-bold text-gray-900 mb-2">
             CityLive
           </h1>
-          <p className="text-gray-500">智能对话 · MCP 工具集成</p>
+          <p className="text-gray-500">Smart Chat · MCP Tools Integration</p>
         </div>
 
         {/* Login Card */}
         <div className="card p-8">
           <h2 className="font-display text-2xl font-semibold text-gray-900 mb-6">
-            欢迎回来
+            Welcome Back
           </h2>
 
           {/* Login Method Toggle */}
@@ -96,7 +96,7 @@ export default function LoginPage() {
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              密码登录
+              Password Login
             </button>
             <button
               type="button"
@@ -107,7 +107,7 @@ export default function LoginPage() {
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              验证码登录
+              Verification Code Login
             </button>
           </div>
 
@@ -122,7 +122,7 @@ export default function LoginPage() {
             {/* Email Input */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                邮箱地址
+                Email Address
               </label>
               <input
                 id="email"
@@ -139,7 +139,7 @@ export default function LoginPage() {
               /* Password Input */
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                  密码
+                  Password
                 </label>
                 <input
                   id="password"
@@ -155,7 +155,7 @@ export default function LoginPage() {
               /* Verification Code Input */
               <div>
                 <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-2">
-                  验证码
+                  Verification Code
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -173,7 +173,7 @@ export default function LoginPage() {
                     disabled={isLoading || !email || codeSent}
                     className="btn btn-secondary whitespace-nowrap"
                   >
-                    {codeSent ? '已发送' : '发送验证码'}
+                    {codeSent ? 'Sent' : 'Send Code'}
                   </button>
                 </div>
               </div>
@@ -191,19 +191,19 @@ export default function LoginPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  登录中...
+                  Logging in...
                 </span>
               ) : (
-                '登录'
+                'Login'
               )}
             </button>
           </form>
 
           {/* Register Link */}
           <p className="mt-6 text-center text-sm text-gray-500">
-            还没有账号？{' '}
+            Don't have an account?{' '}
             <Link to="/register" className="text-primary-600 hover:text-primary-700 font-medium transition-colors">
-              立即注册
+              Register now
             </Link>
           </p>
         </div>

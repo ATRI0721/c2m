@@ -4,9 +4,11 @@ interface ChatInputProps {
   onSendMessage: (message: string) => void;
   disabled?: boolean;
   placeholder?: string;
+  prefilledMessage?: string;
+  onPrefilledMessageUsed?: () => void;
 }
 
-export default function ChatInput({ onSendMessage, disabled = false, placeholder = '输入消息...' }: ChatInputProps) {
+export default function ChatInput({ onSendMessage, disabled = false, placeholder = 'Type a message...', prefilledMessage = '', onPrefilledMessageUsed }: ChatInputProps) {
   const [message, setMessage] = useState('');
   const [hasOverflow, setHasOverflow] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -22,6 +24,18 @@ export default function ChatInput({ onSendMessage, disabled = false, placeholder
       setHasOverflow(textarea.scrollHeight > 200);
     }
   }, [message]);
+
+  // Handle prefilled message from example cards
+  useEffect(() => {
+    if (prefilledMessage) {
+      setMessage(prefilledMessage);
+      onPrefilledMessageUsed?.();
+      // Focus the textarea after message is set
+      setTimeout(() => {
+        textareaRef.current?.focus();
+      }, 0);
+    }
+  }, [prefilledMessage, onPrefilledMessageUsed]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,7 +97,7 @@ export default function ChatInput({ onSendMessage, disabled = false, placeholder
         </button>
       </div>
       <p className="mt-2 text-xs text-gray-500 text-center">
-        按 Enter 发送，Shift + Enter 换行
+        Press Enter to send, Shift + Enter for new line
       </p>
     </form>
   );

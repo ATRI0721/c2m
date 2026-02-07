@@ -16,12 +16,12 @@ interface ToolCallIndicatorProps {
 function formatToolName(toolId: string): string {
   // 如果是 call_ 开头的ID，直接返回"工具"
   if (toolId.startsWith('call_')) {
-    return "工具调用";
+    return "Tool Call";
   }
 
   // 如果是 unknown，返回更友好的文本
   if (toolId === 'unknown' || toolId === 'tool_') {
-    return '工具调用';
+    return 'Tool Call';
   }
 
   // 处理类似 mcp__weather__get_tomorrow_weather 的格式
@@ -31,7 +31,7 @@ function formatToolName(toolId: string): string {
 
   // 如果最后一部分是空字符串，返回"工具调用"
   if (!lastPart) {
-    return '工具调用';
+    return 'Tool Call';
   }
 
   // 将下划线替换为空格，首字母大写
@@ -201,7 +201,7 @@ export default function ToolCallIndicator({
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  参数
+                  Arguments
                 </div>
                 <pre className="bg-gray-800 rounded p-2 overflow-x-auto text-gray-200 whitespace-pre-wrap">
                   {formatValue(args)}
@@ -218,14 +218,14 @@ export default function ToolCallIndicator({
                       <svg className="w-3.5 h-3.5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      错误
+                      Error
                     </>
                   ) : (
                     <>
                       <svg className="w-3.5 h-3.5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      结果
+                      Result
                     </>
                   )}
                 </div>
@@ -242,7 +242,7 @@ export default function ToolCallIndicator({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-                正在调用中...
+                Calling...
               </div>
             )}
           </div>

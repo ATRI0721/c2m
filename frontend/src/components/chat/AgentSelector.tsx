@@ -136,7 +136,7 @@ export default function AgentSelector({ agents, selectedAgent, onSelectAgent, co
 
   return (
     <div className="space-y-4">
-      <h3 className="text-sm font-medium text-gray-700">选择助手</h3>
+      <h3 className="text-sm font-medium text-gray-700">Select Assistant</h3>
       <div className="grid grid-cols-2 gap-3">
         {agents.map((agent) => {
           const colors = AGENT_COLORS[agent.name] || AGENT_COLORS.chat;
@@ -171,7 +171,7 @@ export default function AgentSelector({ agents, selectedAgent, onSelectAgent, co
                   {agent.mcp_services.length > 0 && (
                     <div className="mt-2 flex items-center gap-1">
                       <span className={`text-xs ${isSelected ? colors.text : 'text-gray-500'}`}>
-                        {agent.mcp_services.length} 个工具
+                        {agent.mcp_services.length} {agent.mcp_services.length === 1 ? 'tool' : 'tools'}
                       </span>
                     </div>
                   )}

@@ -17,7 +17,7 @@ export default function RegisterPage() {
 
   const handleSendCode = async () => {
     if (!email) {
-      setError('请输入邮箱地址');
+      setError('Please enter email address');
       return;
     }
 
@@ -27,7 +27,7 @@ export default function RegisterPage() {
       await api.sendVerificationCode('register', { email });
       setCodeSent(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '发送验证码失败');
+      setError(err instanceof Error ? err.message : 'Failed to send verification code');
     } finally {
       setIsLoading(false);
     }
@@ -38,27 +38,27 @@ export default function RegisterPage() {
     setError('');
 
     if (!email) {
-      setError('请输入邮箱地址');
+      setError('Please enter email address');
       return;
     }
 
     if (!password) {
-      setError('请输入密码');
+      setError('Please enter password');
       return;
     }
 
     if (password.length < 6) {
-      setError('密码至少需要6个字符');
+      setError('Password must be at least 6 characters');
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('两次输入的密码不一致');
+      setError('Passwords do not match');
       return;
     }
 
     if (!verificationCode) {
-      setError('请输入验证码');
+      setError('Please enter verification code');
       return;
     }
 
@@ -68,7 +68,7 @@ export default function RegisterPage() {
       await register(email, password, verificationCode);
       navigate('/chat');
     } catch (err) {
-      setError(err instanceof Error ? err.message : '注册失败');
+      setError(err instanceof Error ? err.message : 'Registration failed');
     } finally {
       setIsLoading(false);
     }
@@ -82,13 +82,13 @@ export default function RegisterPage() {
           <h1 className="font-display text-4xl font-bold text-gray-900 mb-2">
             CityLive
           </h1>
-          <p className="text-gray-500">智能对话 · MCP 工具集成</p>
+          <p className="text-gray-500">Smart Chat · MCP Tools Integration</p>
         </div>
 
         {/* Register Card */}
         <div className="card p-8">
           <h2 className="font-display text-2xl font-semibold text-gray-900 mb-6">
-            创建账号
+            Create Account
           </h2>
 
           {/* Error Message */}
@@ -102,7 +102,7 @@ export default function RegisterPage() {
             {/* Email Input */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                邮箱地址
+                Email Address
               </label>
               <input
                 id="email"
@@ -118,14 +118,14 @@ export default function RegisterPage() {
             {/* Password Input */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                密码
+                Password
               </label>
               <input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="至少6个字符"
+                placeholder="At least 6 characters"
                 className="input"
                 disabled={isLoading}
               />
@@ -134,14 +134,14 @@ export default function RegisterPage() {
             {/* Confirm Password Input */}
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                确认密码
+                Confirm Password
               </label>
               <input
                 id="confirmPassword"
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="再次输入密码"
+                placeholder="Enter password again"
                 className="input"
                 disabled={isLoading}
               />
@@ -150,7 +150,7 @@ export default function RegisterPage() {
             {/* Verification Code Input */}
             <div>
               <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-2">
-                验证码
+                Verification Code
               </label>
               <div className="flex gap-2">
                 <input
@@ -168,7 +168,7 @@ export default function RegisterPage() {
                   disabled={isLoading || !email || codeSent}
                   className="btn btn-secondary whitespace-nowrap"
                 >
-                  {codeSent ? '已发送' : '发送验证码'}
+                  {codeSent ? 'Sent' : 'Send Code'}
                 </button>
               </div>
             </div>
@@ -185,19 +185,19 @@ export default function RegisterPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
-                  注册中...
+                  Registering...
                 </span>
               ) : (
-                '注册'
+                'Register'
               )}
             </button>
           </form>
 
           {/* Login Link */}
           <p className="mt-6 text-center text-sm text-gray-500">
-            已有账号？{' '}
+            Already have an account?{' '}
             <Link to="/login" className="text-primary-600 hover:text-primary-700 font-medium transition-colors">
-              立即登录
+              Login now
             </Link>
           </p>
         </div>
