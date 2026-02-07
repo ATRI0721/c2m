@@ -31,15 +31,15 @@ export default function ConversationList({
   };
 
   return (
-    <div className="flex flex-col h-full bg-surface-100 border-r border-surface-300">
+    <div className="flex flex-col h-full bg-surface-100 border-r border-surface-300 overflow-hidden">
       {/* Header */}
-      <div className="p-4 border-b border-surface-300">
+      <div className="p-4 border-b border-surface-300 flex-shrink-0">
         <button
           onClick={onCreateNew}
-          className="btn btn-primary w-full"
+          className="btn btn-primary w-full whitespace-nowrap"
           type="button"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
           新建对话

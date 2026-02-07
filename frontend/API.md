@@ -832,22 +832,16 @@ GET /api/v1/conversation/{conv_id}
       "created_at": "2024-01-15T08:30:00Z",
       "role": "user",
       "content": "你好",
-      "message_type": "message",
-      "tool_call_id": null,
-      "tool_name": null,
-      "tool_arguments": null,
-      "tool_error": false
+      "conversation_id": "conv_123",
+      "tool_calls": []
     },
     {
       "id": "msg_124",
       "created_at": "2024-01-15T08:30:05Z",
       "role": "assistant",
       "content": "你好！有什么可以帮助你的？",
-      "message_type": "message",
-      "tool_call_id": null,
-      "tool_name": null,
-      "tool_arguments": null,
-      "tool_error": false
+      "conversation_id": "conv_123",
+      "tool_calls": []
     }
   ]
 }
@@ -971,33 +965,37 @@ GET /api/v1/conversation/{conv_id}/messages
     "created_at": "2024-01-15T08:30:00Z",
     "role": "user",
     "content": "帮我查一下天气",
-    "message_type": "message",
-    "tool_call_id": null,
-    "tool_name": null,
-    "tool_arguments": null,
-    "tool_error": false
+    "conversation_id": "conv_123",
+    "tool_calls": []
   },
   {
     "id": "msg_124",
     "created_at": "2024-01-15T08:30:05Z",
     "role": "assistant",
-    "content": "正在查询天气信息...",
-    "message_type": "message",
-    "tool_call_id": null,
-    "tool_name": null,
-    "tool_arguments": null,
-    "tool_error": false
-  },
-  {
-    "id": "msg_125",
-    "created_at": "2024-01-15T08:30:06Z",
-    "role": "assistant",
-    "content": null,
-    "message_type": "tool_call",
-    "tool_call_id": "call_123",
-    "tool_name": "get_weather",
-    "tool_arguments": "{\"city\": \"北京\"}",
-    "tool_error": false
+    "content": "正在查询天气信息...\n[TOOL_CALL:call_abc123]\n今天北京天气不错。",
+    "conversation_id": "conv_123",
+    "tool_calls": [
+      {
+        "id": "tc_123",
+        "created_at": "2024-01-15T08:30:06Z",
+        "conversation_id": "conv_123",
+        "message_id": "msg_124",
+        "tool_call_id": "call_abc123",
+        "tool_name": "environment:get_current_weather",
+        "mcp_server": "environment",
+        "arguments": {"city": "北京"},
+        "result": {"temperature": 15, "unit": "celsius", "description": "晴朗"},
+        "status": "completed",
+        "started_at": "2024-01-15T08:30:06Z",
+        "completed_at": "2024-01-15T08:30:07Z",
+        "duration_ms": 1000,
+        "error": false,
+        "error_message": null,
+        "error_type": null,
+        "retry_count": 0,
+        "max_retries": 3
+      }
+    ]
   }
 ]
 ```
@@ -1009,12 +1007,32 @@ GET /api/v1/conversation/{conv_id}/messages
 | id | string | 消息唯一标识 |
 | created_at | string | 创建时间（ISO 8601格式，UTC） |
 | role | string | 消息角色：`user`/`assistant`/`system` |
-| content | string \| null | 消息内容 |
-| message_type | string | 消息类型：`message`/`tool_call` |
-| tool_call_id | string \| null | 工具调用ID（仅tool_call类型） |
-| tool_name | string \| null | 工具名称 |
-| tool_arguments | string \| null | 工具参数（JSON字符串） |
-| tool_error | boolean | 工具调用是否出错 |
+| content | string \| null | 消息内容（assistant消息可能包含工具调用占位符如 `[TOOL_CALL:call_abc123]`） |
+| conversation_id | string | 所属对话ID |
+| tool_calls | array | 关联的工具调用列表（仅assistant消息可能有值） |
+
+**tool_calls 字段说明**：
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | string | 工具调用记录ID |
+| created_at | string | 创建时间（ISO 8601格式，UTC） |
+| conversation_id | string | 所属对话ID |
+| message_id | string \| null | 关联的消息ID |
+| tool_call_id | string | OpenAI工具调用ID（如 `call_abc123`） |
+| tool_name | string | 工具名称（格式：`server_name:tool_name`） |
+| mcp_server | string \| null | MCP服务器名称 |
+| arguments | object | 工具调用参数 |
+| result | object \| null | 工具执行结果 |
+| status | string | 执行状态：`pending`/`running`/`completed`/`failed`/`timeout` |
+| started_at | string \| null | 开始执行时间 |
+| completed_at | string \| null | 完成时间 |
+| duration_ms | number \| null | 执行时长（毫秒） |
+| error | boolean | 是否执行出错 |
+| error_message | string \| null | 错误信息 |
+| error_type | string \| null | 错误类型 |
+| retry_count | number | 已重试次数 |
+| max_retries | number | 最大重试次数 |
 
 **错误响应**：
 
@@ -1071,11 +1089,8 @@ Content-Type: application/json
   "created_at": "2024-01-15T08:30:10Z",
   "role": "user",
   "content": "帮我查一下天气",
-  "message_type": "message",
-  "tool_call_id": null,
-  "tool_name": null,
-  "tool_arguments": null,
-  "tool_error": false
+  "conversation_id": "conv_123",
+  "tool_calls": []
 }
 ```
 

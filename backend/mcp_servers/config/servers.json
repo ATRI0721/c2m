@@ -5,15 +5,10 @@
       "args": ["mcp_servers/servers/config_admin/server.py"],
       "description": "配置管理服务器 - 管理Agent和MCP服务器配置（仅限assistant使用）"
     },
-    "environment": {
-      "command": "python",
-      "args": ["mcp_servers/servers/environment/environment/server.py"],
-      "description": "环境数据服务器 - 空气质量、天气查询"
-    },
-    "usgs-quakes": {
+    "weather-mcp-server": {
       "command": "node",
-      "args": ["mcp_servers/servers/environment/usgs-quakes-mcp/build/index.js"],
-      "description": "美国地震数据查询 (USGS API)"
+      "args": ["mcp_servers/servers/environment/weather-mcp-server/dist/index.js"],
+      "description": "天气预报查询 - 获取指定城市指定日期的天气预报，支持未来16天内的查询 (Open-Meteo)"
     },
     "geocoding": {
       "command": "node",

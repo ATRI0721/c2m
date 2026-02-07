@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuthStore } from '../../stores';
 import { api } from '../../api/api';
 
 export default function LoginPage() {
@@ -12,7 +12,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [codeSent, setCodeSent] = useState(false);
 
-  const { login, loginWithCode } = useAuth();
+  const { login, loginWithCode } = useAuthStore();
   const navigate = useNavigate();
 
   const handleSendCode = async () => {

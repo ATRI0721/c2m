@@ -1,9 +1,13 @@
+import { useState } from 'react';
+
 export type ToolCallStatus = 'pending' | 'success' | 'error';
 
 interface ToolCallIndicatorProps {
   toolCallId: string;
   status?: ToolCallStatus;
   animating?: boolean;
+  arguments?: Record<string, unknown>;
+  result?: Record<string, unknown> | string | null;
 }
 
 /**
@@ -61,20 +65,88 @@ function getStatusClasses(status: ToolCallStatus, animating: boolean) {
 }
 
 /**
+ * 格式化Python对象字符串为更易读的格式
+ */
+function formatPythonObjectString(str: string): string {
+  // 尝试提取TextContent中的text字段
+  const textContentMatch = str.match(/TextContent\([^)]*text='([^']*)'[^)]*\)/);
+  if (textContentMatch && textContentMatch[1]) {
+    return textContentMatch[1];
+  }
+
+  // 尝试提取content=[...]中的内容
+  const contentMatch = str.match(/content=\[([^\]]+)\]/);
+  if (contentMatch && contentMatch[1]) {
+    return contentMatch[1];
+  }
+
+  // 如果字符串包含换行符，尝试清理它
+  if (str.includes('\\n')) {
+    return str.replace(/\\n/g, '\n').replace(/\\t/g, '  ');
+  }
+
+  return str;
+}
+
+/**
+ * 格式化对象为JSON字符串用于显示
+ */
+function formatValue(value: unknown, indent = 0): string {
+  if (value === null) return 'null';
+  if (value === undefined) return 'undefined';
+  if (typeof value === 'string') {
+    // 检查是否是Python对象字符串格式
+    if (value.includes('TextContent') || value.includes('content=') || value.includes('meta=')) {
+      return formatPythonObjectString(value);
+    }
+    return value;
+  }
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (Array.isArray(value)) {
+    if (value.length === 0) return '[]';
+    const items = value.map(v => '  '.repeat(indent + 1) + '- ' + formatValue(v, indent + 1));
+    return '\n' + items.join('\n');
+  }
+  if (typeof value === 'object') {
+    const keys = Object.keys(value);
+    if (keys.length === 0) return '{}';
+    const pairs = keys.map(key => {
+      const formattedValue = formatValue((value as Record<string, unknown>)[key], indent + 1);
+      return '  '.repeat(indent + 1) + `${key}: ${formattedValue}`;
+    });
+    return '\n' + pairs.join('\n');
+  }
+  return String(value);
+}
+
+/**
  * ToolCallIndicator - 显示工具调用的动画图标组件
  * 用于替换 [TOOL_CALL:call_xxx:status] 格式的文本标记
  */
 export default function ToolCallIndicator({
   toolCallId,
   status = 'pending',
-  animating = true
+  animating = true,
+  arguments: args,
+  result
 }: ToolCallIndicatorProps) {
+  const [isTooltipOpen, setIsTooltipOpen] = useState(false);
   const displayName = formatToolName(toolCallId);
   const statusClasses = getStatusClasses(status, animating);
   const shouldAnimate = status === 'pending' && animating;
 
+  // 准备tooltip内容
+  const hasArguments = args && Object.keys(args).length > 0;
+  const hasResult = result !== undefined && result !== null && result !== '';
+  const hasTooltipContent = hasArguments || hasResult;
+
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium border align-middle mx-1 ${statusClasses.container}`}>
+    <span
+      className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium border align-middle mx-1 relative ${statusClasses.container} ${hasTooltipContent ? 'cursor-help' : ''}`}
+      onMouseEnter={() => hasTooltipContent && setIsTooltipOpen(true)}
+      onMouseLeave={() => setIsTooltipOpen(false)}
+      title={hasTooltipContent ? undefined : displayName}
+    >
       {/* 齿轮图标 */}
       <svg
         className={`w-3.5 h-3.5 flex-shrink-0 ${shouldAnimate ? 'animate-spin-slow' : ''} ${status === 'error' ? 'text-red-600' : 'text-green-600'}`}
@@ -115,6 +187,67 @@ export default function ToolCallIndicator({
       <span className="whitespace-nowrap">
         {displayName}
       </span>
+
+      {/* Tooltip */}
+      {isTooltipOpen && hasTooltipContent && (
+        <div className="absolute left-0 top-full mt-2 z-50 w-96 max-w-md">
+          <div className="bg-gray-900 text-white text-xs rounded-lg shadow-xl p-4 border border-gray-700">
+            <div className="font-semibold mb-2 text-sm">{displayName}</div>
+
+            {/* 参数部分 */}
+            {hasArguments && (
+              <div className="mb-3">
+                <div className="text-gray-400 font-medium mb-1.5 flex items-center gap-1.5">
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  参数
+                </div>
+                <pre className="bg-gray-800 rounded p-2 overflow-x-auto text-gray-200 whitespace-pre-wrap">
+                  {formatValue(args)}
+                </pre>
+              </div>
+            )}
+
+            {/* 结果部分 */}
+            {hasResult && status !== 'pending' && (
+              <div>
+                <div className="text-gray-400 font-medium mb-1.5 flex items-center gap-1.5">
+                  {status === 'error' ? (
+                    <>
+                      <svg className="w-3.5 h-3.5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      错误
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-3.5 h-3.5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      结果
+                    </>
+                  )}
+                </div>
+                <pre className={`rounded p-2 overflow-x-auto whitespace-pre-wrap ${status === 'error' ? 'bg-red-900/30 text-red-200' : 'bg-gray-800 text-gray-200'}`}>
+                  {typeof result === 'string' ? result : formatValue(result)}
+                </pre>
+              </div>
+            )}
+
+            {/* 调用中提示 */}
+            {status === 'pending' && !hasResult && (
+              <div className="text-gray-400 italic flex items-center gap-2">
+                <svg className="w-3.5 h-3.5 animate-spin-slow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                正在调用中...
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </span>
   );
 }

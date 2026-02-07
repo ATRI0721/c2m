@@ -9,29 +9,16 @@
       "description": "空气质量、天气、地震等环境相关数据",
       "servers": [
         {
-          "id": "environment",
-          "name": "环境数据服务器",
-          "type": "custom",
-          "path": "mcp/servers/environment/environment",
-          "runtime": "python",
-          "entry": "server.py",
-          "description": "空气质量查询、天气预报、风速、湿度、气温",
+          "id": "weather-mcp-server",
+          "name": "天气预报查询",
+          "type": "third-party",
+          "path": "mcp/servers/environment/weather-mcp-server",
+          "runtime": "node",
+          "entry": "dist/index.js",
+          "description": "获取指定城市指定日期的天气预报，支持未来16天内任意日期的查询，包括温度、天气状况、降水概率和风速等信息",
           "api": "Open-Meteo",
           "auth_required": false,
           "status": "active"
-        },
-        {
-          "id": "usgs-quakes",
-          "name": "美国地震查询",
-          "type": "third-party",
-          "path": "mcp/servers/environment/usgs-quakes-mcp",
-          "runtime": "node",
-          "entry": "build/index.js",
-          "description": "美国地震数据查询",
-          "api": "USGS Earthquake Hazards",
-          "auth_required": false,
-          "status": "active",
-          "source": "https://github.com/blake365/usgs-quakes-mcp"
         }
       ]
     },
@@ -156,10 +143,10 @@
     }
   },
   "summary": {
-    "total_servers": 9,
-    "custom_servers": 4,
+    "total_servers": 8,
+    "custom_servers": 3,
     "third_party_servers": 5,
     "requires_auth": 1,
-    "active": 9
+    "active": 8
   }
 }

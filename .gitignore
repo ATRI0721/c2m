@@ -106,5 +106,7 @@ mcp_servers/node_modules/
 城市计算调研.xlsx
 
 .claude/
+homepage/
+homepage.*
 
 !.gitkeep

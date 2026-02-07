@@ -6,6 +6,11 @@ import rehypeHighlight from 'rehype-highlight';
 import 'highlight.js/styles/github-dark.css';
 import ToolCallIndicator, { parseToolCalls, type ToolCallStatus } from './ToolCallIndicator';
 
+interface ToolCallDetails {
+  arguments?: Record<string, unknown>;
+  result?: Record<string, unknown> | string | null;
+}
+
 interface ChatMessageProps {
   message: Message;
   streamingEvents?: SSEEvent[];
@@ -18,10 +23,13 @@ export default function ChatMessage({ message, streamingEvents = [] }: ChatMessa
   const isStreaming = streamingEvents.length > 0;
   const hasToolCall = message.tool_call_id !== null;
 
-  // 追踪工具调用状态
+  // 追踪工具调用状态和详情
   const toolCallStatuses = useMemo(() => {
     const statuses = new Map<string, ToolCallStatus>();
+    const details = new Map<string, ToolCallDetails>();
     const toolOrder: string[] = [];
+    // 保存原始tool_call_id到显示ID的映射
+    const originalToolIdMap = new Map<string, string>();
 
     for (const event of streamingEvents) {
       if (event.type === 'tool_call') {
@@ -32,38 +40,56 @@ export default function ChatMessage({ message, streamingEvents = [] }: ChatMessa
         const finalToolId = (!toolId || toolId === 'call_' || toolId.startsWith('tool_')) ? `工具调用${toolOrder.length + 1}` : toolId;
         if (!statuses.has(finalToolId)) {
           statuses.set(finalToolId, 'pending');
+          // 保存原始tool_call_id的映射（如果有）
+          if (toolCallEvent.tool_call_id) {
+            originalToolIdMap.set(toolCallEvent.tool_call_id, finalToolId);
+          }
+          // 保存参数 (优先使用 arguments 字段,其次使用 args)
+          const args = toolCallEvent.arguments || toolCallEvent.args;
+          if (args) {
+            details.set(finalToolId, { arguments: args });
+          }
           toolOrder.push(finalToolId);
         }
       } else if (event.type === 'tool_result') {
         // 检查结果中是否有错误
         const resultEvent = event as Extract<SSEEvent, { type: 'tool_result' }>;
         const result = resultEvent.result as any;
+        const isError = resultEvent.error === true ||
+                       result?.error !== undefined ||
+                       result?.statusCode !== undefined ||
+                       (result?.status && result.status !== 'success');
 
-        // 找到最近的一个pending工具调用，标记为完成
-        for (let i = toolOrder.length - 1; i >= 0; i--) {
-          const toolId = toolOrder[i];
-          if (statuses.get(toolId) === 'pending') {
-            // 检查是否失败（结果中包含error字段或状态码不是200）
-            const isError = result?.error !== undefined ||
-                           result?.statusCode !== undefined ||
-                           (result?.status && result.status !== 'success');
-            statuses.set(toolId, isError ? 'error' : 'success');
-            break;
+        // 优先使用 tool_call_id 来精确匹配
+        let targetToolId: string | null = null;
+        if (resultEvent.tool_call_id && originalToolIdMap.has(resultEvent.tool_call_id)) {
+          // 使用原始ID映射找到对应的工具调用
+          targetToolId = originalToolIdMap.get(resultEvent.tool_call_id)!;
+        } else {
+          // 回退到找到最近的一个pending工具调用
+          for (let i = toolOrder.length - 1; i >= 0; i--) {
+            const toolId = toolOrder[i];
+            if (statuses.get(toolId) === 'pending') {
+              targetToolId = toolId;
+              break;
+            }
           }
+        }
+
+        if (targetToolId) {
+          statuses.set(targetToolId, isError ? 'error' : 'success');
+          // 保存结果
+          const existingDetails = details.get(targetToolId) || {};
+          details.set(targetToolId, {
+            ...existingDetails,
+            result: resultEvent.result
+          });
         }
       }
     }
 
-    return { statuses, toolOrder };
+    return { statuses, toolOrder, details };
   }, [streamingEvents]);
-
-  console.log('[ChatMessage] Render:', {
-    isStreaming,
-    streamingEventsCount: streamingEvents.length,
-    hasToolCall,
-    role: message.role,
-    toolCallStatuses,
-  });
 
   // Build content for display
   const displayContent = message.content || '';
@@ -79,6 +105,7 @@ export default function ChatMessage({ message, streamingEvents = [] }: ChatMessa
 
     const parts: Array<string | { type: 'tool_call'; id: string }> = [];
     let textBuffer = '';
+    let toolCallCount = 0;
 
     for (const event of streamingEvents) {
       if (event.type === 'content') {
@@ -91,13 +118,11 @@ export default function ChatMessage({ message, streamingEvents = [] }: ChatMessa
           textBuffer = '';
         }
         const toolCallEvent = event as Extract<SSEEvent, { type: 'tool_call' }>;
-        let toolName = toolCallEvent.tool || toolCallEvent.tool_call_id || '';
-        // Generate a friendly tool name if needed
-        if (!toolName || toolName === 'call_' || toolName.startsWith('tool_')) {
-          const currentToolIndex = parts.filter(p => typeof p !== 'string').length;
-          toolName = `工具调用${currentToolIndex + 1}`;
-        }
-        parts.push({ type: 'tool_call', id: toolName });
+        // Use the same logic as toolCallStatuses to ensure ID consistency
+        const toolId = toolCallEvent.tool || toolCallEvent.tool_call_id || `tool_${toolCallCount}`;
+        const finalToolId = (!toolId || toolId === 'call_' || toolId.startsWith('tool_')) ? `工具调用${toolCallCount + 1}` : toolId;
+        parts.push({ type: 'tool_call', id: finalToolId });
+        toolCallCount++;
       }
     }
 
@@ -182,12 +207,15 @@ export default function ChatMessage({ message, streamingEvents = [] }: ChatMessa
               );
             } else {
               const status = toolCallStatuses.statuses.get(part.id) || 'pending';
+              const details = toolCallStatuses.details.get(part.id);
               return (
                 <ToolCallIndicator
                   key={index}
                   toolCallId={part.id}
                   status={status}
                   animating={isStreaming}
+                  arguments={details?.arguments}
+                  result={details?.result}
                 />
               );
             }
@@ -198,6 +226,21 @@ export default function ChatMessage({ message, streamingEvents = [] }: ChatMessa
 
     // Non-streaming mode: parse tool call placeholders from backend messages
     const parts = parseToolCalls(content);
+
+    // Create a map of tool_call_id to tool call details from message.tool_calls
+    const toolCallsMap = useMemo(() => {
+      const map = new Map<string, { arguments?: Record<string, unknown>; result?: Record<string, unknown> | string; error?: boolean }>();
+      if (message.tool_calls) {
+        for (const tc of message.tool_calls) {
+          map.set(tc.tool_call_id, {
+            arguments: tc.arguments,
+            result: tc.result,
+            error: tc.error
+          });
+        }
+      }
+      return map;
+    }, [message.tool_calls]);
 
     // If we found tool call markers in the content, render them with icons
     if (parts.length > 1 || (parts.length === 1 && typeof parts[0] !== 'string')) {
@@ -219,15 +262,28 @@ export default function ChatMessage({ message, streamingEvents = [] }: ChatMessa
                 <p key={index} className="whitespace-pre-wrap break-words">{part}</p>
               );
             } else {
-              // For loaded messages, show success/error status based on message metadata
-              // Since we don't have individual tool status, default to success
-              const status: ToolCallStatus = 'success';
+              // For loaded messages, try to get details from tool_calls map
+              const toolCallDetails = toolCallsMap.get(part.id);
+
+              // Determine status based on tool_call details
+              let status: ToolCallStatus = 'success';
+              if (toolCallDetails?.error) {
+                status = 'error';
+              } else if (toolCallDetails) {
+                // If we have tool_call details but no error, it's success
+                status = 'success';
+              } else if (part.status === 'error' || part.status === 'pending') {
+                status = part.status;
+              }
+
               return (
                 <ToolCallIndicator
                   key={index}
                   toolCallId={part.id}
                   status={status}
                   animating={false}
+                  arguments={toolCallDetails?.arguments}
+                  result={toolCallDetails?.result}
                 />
               );
             }
@@ -250,12 +306,6 @@ export default function ChatMessage({ message, streamingEvents = [] }: ChatMessa
       <p className="whitespace-pre-wrap break-words">{content}</p>
     );
   };
-
-  console.log('[ChatMessage] Content check:', {
-    displayContentLength: displayContent.length,
-    hasContent,
-    hasToolCall,
-  });
 
   return (
     <div className={`flex gap-3 ${isUser ? 'flex-row-reverse' : ''}`}>

@@ -71,6 +71,14 @@ export interface Message {
   tool_name: string | null;
   tool_arguments: Record<string, unknown> | null;
   tool_error: boolean;
+  tool_calls?: Array<{
+    tool_call_id: string;
+    tool_name: string;
+    arguments: Record<string, unknown>;
+    result?: Record<string, unknown> | string;
+    status?: string;
+    error?: boolean;
+  }>;
 }
 
 // Agent Types
@@ -124,11 +132,14 @@ export interface SSEToolCallEvent {
   tool?: string;
   tool_call_id?: string;
   args?: Record<string, unknown>;
+  arguments?: Record<string, unknown>;
 }
 
 export interface SSEToolResultEvent {
   type: 'tool_result';
-  result: Record<string, unknown>;
+  tool_call_id?: string;
+  result: Record<string, unknown> | string;
+  error?: boolean;
 }
 
 export interface SSEEndEvent {
