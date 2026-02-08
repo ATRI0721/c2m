@@ -9,19 +9,24 @@ import ToolCallIndicator, { parseToolCalls, type ToolCallStatus } from './ToolCa
 interface ChatMessageProps {
   message: Message;
   isStreaming?: boolean;
+  streamingContent?: string; // 流式传输中的实时内容
 }
 
-export default function ChatMessage({ message, isStreaming = false }: ChatMessageProps) {
+export default function ChatMessage({ message, isStreaming = false, streamingContent }: ChatMessageProps) {
   const isUser = message.role === 'user';
   const isSystem = message.role === 'system';
 
   const hasToolCall = message.tool_call_id !== null;
 
+  // 在流式传输时使用 streamingContent，否则使用 message.content
+  // 这样可以确保在流式传输中实时显示工具调用标记
+  const contentToParse = isStreaming && streamingContent ? streamingContent : (message.content || '');
+
   // 解析消息内容中的工具调用占位符
-  // 这个函数从已保存的消息中解析工具调用标记
+  // 这个函数从消息内容中解析工具调用标记
   const parsedContent = useMemo(() => {
-    return parseToolCalls(message.content || '');
-  }, [message.content]);
+    return parseToolCalls(contentToParse);
+  }, [contentToParse]);
 
   // 创建 tool_calls 映射，用于显示工具调用详情
   const toolCallsMap = useMemo(() => {
@@ -137,19 +142,23 @@ export default function ChatMessage({ message, isStreaming = false }: ChatMessag
               const toolCallDetails = toolCallsMap.get(part.id);
 
               // 根据详情确定状态
-              let status: ToolCallStatus = 'success';
+              // 如果没有工具详情，说明还在流式传输中，应该是pending状态
+              let status: ToolCallStatus = 'pending';
               if (toolCallDetails?.error) {
                 status = 'error';
-              } else if (!toolCallDetails) {
-                status = 'pending';
+              } else if (toolCallDetails?.result) {
+                status = 'success';
               }
+
+              // 如果是pending且正在流式传输，则显示动画
+              const shouldAnimate = status === 'pending' && isStreaming;
 
               return (
                 <ToolCallIndicator
                   key={index}
                   toolCallId={part.id}
                   status={status}
-                  animating={false}
+                  animating={shouldAnimate}
                   arguments={toolCallDetails?.arguments}
                   result={toolCallDetails?.result}
                 />

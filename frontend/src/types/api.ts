@@ -129,14 +129,17 @@ export interface SSEContentEvent {
 
 export interface SSEToolCallEvent {
   type: 'tool_call';
-  tool?: string;
   tool_call_id?: string;
+  tool_id?: string;
+  tool?: string;
   args?: Record<string, unknown>;
   arguments?: Record<string, unknown>;
+  placeholder?: string;
 }
 
 export interface SSEToolResultEvent {
   type: 'tool_result';
+  tool_id?: string;
   tool_call_id?: string;
   result: Record<string, unknown> | string;
   error?: boolean;

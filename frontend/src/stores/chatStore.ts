@@ -116,6 +116,17 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   // Messages
   loadMessages: async (conversationId) => {
+    // Check if messages are already loaded for this conversation
+    // This prevents reloading messages after creating a new conversation
+    const state = get();
+    const alreadyLoaded = state.messages.length > 0 &&
+      state.messages.some(msg => msg.conversation_id === conversationId);
+
+    if (alreadyLoaded) {
+      console.log('[ChatStore] Messages already loaded for conversation:', conversationId);
+      return;
+    }
+
     set({ isLoadingMessages: true });
     try {
       const messages = await api.getConversationMessages(conversationId);

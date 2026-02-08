@@ -25,7 +25,7 @@ export default function ConversationList({
     if (confirm('Are you sure you want to delete this conversation?')) {
       await onDeleteConversation(id);
       if (currentConversationId === id) {
-        navigate('/chat');
+        navigate('/chat', { replace: true });
       }
     }
   };

@@ -479,8 +479,8 @@ Content-Type: application/json
 | type | 说明 | 数据结构 |
 |------|------|----------|
 | content | 文本内容片段 | `{"type": "content", "content": "文本"}` |
-| tool_call | 工具调用开始 | `{"type": "tool_call", "tool_id": "工具ID", "arguments": {...}, "placeholder": "占位符"}` |
-| tool_result | 工具返回结果 | `{"type": "tool_result", "tool_id": "工具ID", "result": "结果", "error": boolean}` |
+| tool_call | 工具调用开始 | `{"type": "tool_call", "tool_call_id": "调用ID", "tool_id": "工具ID", "arguments": {...}, "placeholder": "占位符"}` |
+| tool_result | 工具返回结果 | `{"type": "tool_result", "tool_call_id": "调用ID", "tool_id": "工具ID", "result": "结果", "error": boolean}` |
 | end | 流结束标记 | `{"type": "end"}` |
 | error | 错误信息 | `{"type": "error", "message": "错误描述"}` |
 
@@ -492,13 +492,14 @@ Content-Type: application/json
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | type | string | 固定值 `"tool_call"` |
+| tool_call_id | string | 工具调用唯一标识，格式：`call_xxxxxxxx`（8位随机字符），用于关联 tool_result |
 | tool_id | string | 工具唯一标识，格式：`server_name:tool_name`（如 `environment:get_weather`） |
 | arguments | object | 工具调用参数 |
 | placeholder | string | 文本占位符，用于在响应中标记工具调用位置 |
 
 **示例**：
 ```json
-data: {"type": "tool_call", "tool_id": "environment:get_current_weather", "arguments": {"city": "北京"}, "placeholder": "\n[TOOL_CALL:call_abc123]\n"}
+data: {"type": "tool_call", "tool_call_id": "call_abc123", "tool_id": "environment:get_current_weather", "arguments": {"city": "北京"}, "placeholder": "\n[TOOL_CALL:call_abc123]\n"}
 ```
 
 ##### tool_result（工具返回结果）
@@ -507,18 +508,19 @@ data: {"type": "tool_call", "tool_id": "environment:get_current_weather", "argum
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | type | string | 固定值 `"tool_result"` |
+| tool_call_id | string | 工具调用唯一标识，与tool_call中的tool_call_id对应 |
 | tool_id | string | 工具唯一标识，与tool_call中的tool_id对应 |
-| result | string | 工具执行结果（成功时返回数据，失败时返回错误消息） |
+| result | string \| object | 工具执行结果（成功时返回数据，失败时返回错误消息） |
 | error | boolean | 执行状态：`false`表示成功，`true`表示失败 |
 
 **成功示例**：
 ```json
-data: {"type": "tool_result", "tool_id": "environment:get_current_weather", "result": "{\"temperature\": 15, \"unit\": \"celsius\", \"description\": \"晴朗\"}", "error": false}
+data: {"type": "tool_result", "tool_call_id": "call_abc123", "tool_id": "environment:get_current_weather", "result": "{\"temperature\": 15, \"unit\": \"celsius\", \"description\": \"晴朗\"}", "error": false}
 ```
 
 **失败示例**：
 ```json
-data: {"type": "tool_result", "tool_id": "environment:get_current_weather", "result": "Error: API request failed - timeout", "error": true}
+data: {"type": "tool_result", "tool_call_id": "call_abc123", "tool_id": "environment:get_current_weather", "result": "Error: API request failed - timeout", "error": true}
 ```
 
 **响应示例**：
@@ -528,9 +530,9 @@ data: {"type": "content", "content": "北京的"}
 
 data: {"type": "content", "content": "天气是"}
 
-data: {"type": "tool_call", "tool_id": "environment:get_current_weather", "arguments": {"city": "北京"}, "placeholder": "\n[TOOL_CALL:call_abc123]\n"}
+data: {"type": "tool_call", "tool_call_id": "call_abc123", "tool_id": "environment:get_current_weather", "arguments": {"city": "北京"}, "placeholder": "\n[TOOL_CALL:call_abc123]\n"}
 
-data: {"type": "tool_result", "tool_id": "environment:get_current_weather", "result": "{\"temperature\": 15, \"unit\": \"celsius\"}", "error": false}
+data: {"type": "tool_result", "tool_call_id": "call_abc123", "tool_id": "environment:get_current_weather", "result": "{\"temperature\": 15, \"unit\": \"celsius\"}", "error": false}
 
 data: {"type": "content", "content": "晴天，温度15°C"}
 

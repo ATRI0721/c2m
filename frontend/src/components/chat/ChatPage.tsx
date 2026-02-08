@@ -22,6 +22,7 @@ export default function ChatPage() {
     messages,
     isStreaming,
     streamingMessageId,
+    streamingContent,
     isLoadingConversations,
     isLoadingMessages,
     loadConversations,
@@ -167,6 +168,14 @@ export default function ChatPage() {
       });
 
       let assistantContent = '';
+      // 维护工具调用信息，用于实时显示 tooltip
+      const toolCallsMap = new Map<string, {
+        tool_call_id: string;
+        tool_name: string;
+        arguments: Record<string, unknown>;
+        result?: Record<string, unknown> | string;
+        error?: boolean;
+      }>();
 
       console.log('[Chat] Processing stream events...');
       for await (const event of response) {
@@ -181,12 +190,59 @@ export default function ChatPage() {
         } else if (event.type === 'tool_call') {
           // Tool call event - insert placeholder into content for database storage
           const toolCallEvent = event as Extract<SSEEvent, { type: 'tool_call' }>;
-          const toolId = toolCallEvent.tool || toolCallEvent.tool_call_id || '';
-          // Format: [TOOL_CALL:tool_id]
-          assistantContent += `\n[TOOL_CALL:${toolId}]\n`;
-          // 实时更新
-          updateMessage(assistantMessageId, { content: assistantContent });
-          console.log('[Chat] Tool call:', toolId, toolCallEvent.args);
+          // 获取工具调用ID和工具ID
+          const toolCallId = toolCallEvent.tool_call_id || '';
+          const toolId = toolCallEvent.tool_id || toolCallEvent.tool || '';
+          // 获取工具参数
+          const args = toolCallEvent.args || toolCallEvent.arguments || {};
+
+          // 保存工具调用信息，使用 toolCallId 作为 key
+          toolCallsMap.set(toolCallId, {
+            tool_call_id: toolCallId,
+            tool_name: toolId,
+            arguments: args,
+          });
+
+          // 如果后端没有提供 placeholder，使用 toolCallId 生成
+          const placeholder = toolCallEvent.placeholder || `\n[TOOL_CALL:${toolCallId}]\n`;
+          assistantContent += placeholder;
+          appendStreamingContent(placeholder);
+
+          // 实时更新消息内容和 tool_calls
+          updateMessage(assistantMessageId, {
+            content: assistantContent,
+            tool_calls: Array.from(toolCallsMap.values()).map(tc => ({
+              tool_call_id: tc.tool_call_id,
+              tool_name: tc.tool_name,
+              arguments: tc.arguments,
+              result: tc.result,
+              error: tc.error,
+            }))
+          });
+          console.log('[Chat] Tool call:', toolCallId, toolId, args);
+        } else if (event.type === 'tool_result') {
+          // Tool result event - update tool call with result
+          const toolResultEvent = event as Extract<SSEEvent, { type: 'tool_result' }>;
+          // 优先使用 tool_call_id，其次 tool_id
+          const toolCallId = toolResultEvent.tool_call_id || toolResultEvent.tool_id;
+
+          if (toolCallId && toolCallsMap.has(toolCallId)) {
+            const existingCall = toolCallsMap.get(toolCallId)!;
+            existingCall.result = toolResultEvent.result;
+            existingCall.error = toolResultEvent.error;
+
+            // 更新消息的 tool_calls
+            updateMessage(assistantMessageId, {
+              tool_calls: Array.from(toolCallsMap.values()).map(tc => ({
+                tool_call_id: tc.tool_call_id,
+                tool_name: tc.tool_name,
+                arguments: tc.arguments,
+                result: tc.result,
+                error: tc.error,
+              }))
+            });
+            console.log('[Chat] Tool result:', toolCallId, toolResultEvent.result);
+          }
         } else if (event.type === 'end') {
           console.log('[Chat] Stream ended normally');
         } else if (event.type === 'error') {
@@ -207,14 +263,11 @@ export default function ChatPage() {
 
       // Navigate after streaming completes for new conversations
       if (isNewConversation) {
-        console.log('[Chat] Updating URL for new conversation:', currentConvId);
-        // 使用 history.replaceState 更新 URL，但不触发 React Router 导航
-        // 这样可以：
-        // 1. 更新浏览器地址栏（用户可以复制链接）
-        // 2. 不触发 useEffect 的 loadMessages
-        // 3. 避免消息重复
-        window.history.replaceState({}, '', `/chat/${currentConvId}`);
-        // 更新 store 中的当前会话 ID
+        console.log('[Chat] Navigating to new conversation:', currentConvId);
+        // Use React Router's navigate to properly update the URL and internal state
+        // This ensures subsequent navigations work correctly
+        navigate(`/chat/${currentConvId}`, { replace: true });
+        // Update store's current conversation ID
         setCurrentConversation(currentConvId);
       } else {
         // For existing conversations, optimistically update timestamp
@@ -258,7 +311,7 @@ export default function ChatPage() {
 
   const handleCreateNew = () => {
     setCurrentConversation(null);
-    navigate('/chat');
+    navigate('/chat', { replace: true });
   };
 
   if (authLoading) {
@@ -456,6 +509,7 @@ export default function ChatPage() {
                     key={msg.id}
                     message={msg}
                     isStreaming={isStreamingMessage}
+                    streamingContent={isStreamingMessage ? streamingContent : undefined}
                   />
                 );
               })}

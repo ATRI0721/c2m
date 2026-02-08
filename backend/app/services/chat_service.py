@@ -135,6 +135,7 @@ class ChatService:
 
                         # 发送给前端
                         yield self._format_sse("tool_call", {
+                            "tool_call_id": tool_call_id,
                             "tool_id": tool_id,
                             "arguments": arguments,
                             "placeholder": placeholder  # 告诉前端占位符位置
@@ -147,6 +148,9 @@ class ChatService:
                         tool_id = chunk["tool_id"]
                         result = chunk["result"]
                         is_error = chunk.get("error", False)
+
+                        # 获取 tool_call_id（从 pending_tool_call 中）
+                        tool_call_id_for_result = pending_tool_call.tool_call_id if pending_tool_call else None
 
                         # 使用新的数据模型更新工具调用状态
                         if pending_tool_call:
@@ -166,7 +170,7 @@ class ChatService:
                             )
 
                             logger.info(
-                                f"Updated tool_call: tool_id={tool_id}, "
+                                f"Updated tool_call: tool_id={tool_id}, call_id={tool_call_id_for_result}, "
                                 f"status={status}, duration={pending_tool_call.duration_ms}ms"
                             )
 
@@ -175,12 +179,13 @@ class ChatService:
 
                         # 发送给前端
                         yield self._format_sse("tool_result", {
+                            "tool_call_id": tool_call_id_for_result,
                             "tool_id": tool_id,
                             "result": result,
                             "error": is_error
                         })
 
-                        logger.info(f"Saved tool_result: tool_id={tool_id}, error={is_error}")
+                        logger.info(f"Saved tool_result: tool_id={tool_id}, call_id={tool_call_id_for_result}, error={is_error}")
 
                     elif event_type == "error":
                         # 错误事件

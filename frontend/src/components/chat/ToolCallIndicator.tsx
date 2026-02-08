@@ -259,7 +259,8 @@ export default function ToolCallIndicator({
  */
 export function parseToolCalls(content: string): Array<string | { type: 'tool_call'; id: string; status?: ToolCallStatus }> {
   const parts: Array<string | { type: 'tool_call'; id: string; status?: ToolCallStatus }> = [];
-  const toolCallRegex = /\[TOOL_CALL:([a-zA-Z0-9_-]+)(?::(pending|success|error))?\]/g;
+  // 修改正则表达式：允许空的 tool_id（使用 * 替代 +）
+  const toolCallRegex = /\[TOOL_CALL:([a-zA-Z0-9_-]*)(?::(pending|success|error))?\]/g;
 
   let lastIndex = 0;
   let match: RegExpExecArray | null;
