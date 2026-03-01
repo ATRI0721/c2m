@@ -2,6 +2,7 @@ import logging
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
+
 from app.core.deps import CurrentUser, SessionDep, GetConversation, get_system_config
 from app.core.config import settings
 from app.models.database import Conversation
@@ -66,4 +67,13 @@ async def chat_stream(
             error_data = json.dumps({"type": "error", "message": str(e)}, ensure_ascii=False)
             yield f"data: {error_data}\n\n"
 
-    return StreamingResponse(generate(), media_type="text/event-stream")
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            # Nginx / some proxies: disable response buffering for SSE
+            "X-Accel-Buffering": "no",
+        },
+    )

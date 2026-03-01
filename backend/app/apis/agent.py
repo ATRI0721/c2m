@@ -2,6 +2,7 @@ import logging
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+import json
 
 from app.core.deps import CurrentUser, SessionDep, GetConversation, get_system_config
 from app.core.config import settings
@@ -150,6 +151,16 @@ async def assistant_chat(
                 yield chunk
         except Exception as e:
             logger.error(f"Assistant chat error: {e}")
-            yield f"data: {{'error': str(e)}}\n\n"
+            error_data = json.dumps({"type": "error", "message": str(e)}, ensure_ascii=False)
+            yield f"data: {error_data}\n\n"
 
-    return StreamingResponse(generate(), media_type="text/event-stream")
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            # Nginx / some proxies: disable response buffering for SSE
+            "X-Accel-Buffering": "no",
+        },
+    )

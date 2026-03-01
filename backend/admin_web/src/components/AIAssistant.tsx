@@ -11,7 +11,7 @@ import remarkGfm from 'remark-gfm';
 // A segment in the message stream can be either content or a tool call
 type MessageSegment =
   | { type: 'content'; content: string }
-  | { type: 'tool_call'; toolId: string; toolName: string; arguments: Record<string, any>; startTime: number; status: 'pending' | 'running' | 'completed' | 'failed'; result?: string; error?: boolean; duration?: number };
+  | { type: 'tool_call'; callId: string; toolId: string; toolName: string; arguments: Record<string, any>; startTime: number; status: 'pending' | 'running' | 'completed' | 'failed'; result?: string; error?: boolean; duration?: number };
 
 interface Message {
   role: 'user' | 'assistant';
@@ -224,23 +224,25 @@ export function AIAssistant() {
                   }
                   // 处理工具调用事件
                   else if (parsed.type === 'tool_call') {
+                    const callId = parsed.tool_call_id || parsed.tool_id;
                     const toolId = parsed.tool_id;
                     const toolName = toolId.split(':')[1] || toolId;
                     const toolCall: MessageSegment & { type: 'tool_call' } = {
                       type: 'tool_call',
+                      callId,
                       toolId,
                       toolName,
                       arguments: parsed.arguments || {},
                       startTime: Date.now(),
                       status: 'running',
                     };
-                    activeToolCalls.set(toolId, toolCall);
+                    activeToolCalls.set(callId, toolCall);
                     lastMessage.segments.push({ ...toolCall });
                   }
                   // 处理工具结果事件
                   else if (parsed.type === 'tool_result') {
-                    const toolId = parsed.tool_id;
-                    const existingCall = activeToolCalls.get(toolId);
+                    const callId = parsed.tool_call_id || parsed.tool_id;
+                    const existingCall = activeToolCalls.get(callId);
                     if (existingCall) {
                       const duration = Date.now() - existingCall.startTime;
                       const updatedCall: MessageSegment & { type: 'tool_call' } = {
@@ -250,10 +252,10 @@ export function AIAssistant() {
                         error: parsed.error,
                         duration,
                       };
-                      activeToolCalls.set(toolId, updatedCall);
+                      activeToolCalls.set(callId, updatedCall);
                       // Update the segment in the message
                       lastMessage.segments = lastMessage.segments.map(seg =>
-                        seg.type === 'tool_call' && seg.toolId === toolId ? { ...updatedCall } : seg
+                        seg.type === 'tool_call' && seg.callId === callId ? { ...updatedCall } : seg
                       );
                     }
                   }

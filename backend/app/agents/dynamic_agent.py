@@ -84,6 +84,9 @@ class DynamicAgent(BaseAgent):
 
         # 获取可用的MCP工具
         mcp_tools = await self.get_mcp_tools(enabled_mcp_services)
+        logger.info(f"[{self.name}] MCP tools count: {len(mcp_tools)}")
+        if mcp_tools:
+            logger.info(f"[{self.name}] Tool names: {[t['function']['name'] for t in mcp_tools]}")
 
         # 工具调用循环 - 最多20轮防止无限循环
         max_iterations = 20
@@ -91,56 +94,85 @@ class DynamicAgent(BaseAgent):
 
         while iteration < max_iterations:
             try:
-                # 调用OpenAI API，支持函数调用
-                response = await self.chat.chat.completions.create(
-                    model=self.model,
-                    messages=openai_messages,
-                    tools=mcp_tools if mcp_tools else None,
-                    stream=True
+                # 调用 OpenAI API（流式），并通过 tool_calls 循环完成工具调用
+                api_kwargs = {
+                    "model": self.model,
+                    "messages": openai_messages,
+                    "stream": True
+                }
+                if mcp_tools:
+                    api_kwargs["tools"] = mcp_tools
+                    # 默认交给模型判断是否需要调用工具
+                    api_kwargs["tool_choice"] = "auto"
+
+                logger.info(
+                    f"[{self.name}] Calling API iteration={iteration}, "
+                    f"tool_choice={api_kwargs.get('tool_choice', 'none')}, model={self.model}"
                 )
 
-                # 收集响应内容和工具调用
-                content_chunks = []
-                tool_calls_buffer = {}  # index -> tool_call
+                stream = await self.chat.chat.completions.create(**api_kwargs)
 
-                async for chunk in response:
+                # 收集响应内容和工具调用（tool_calls 在 streaming 模式下会分片到多个 chunk）
+                content_parts: list[str] = []
+                tool_calls_buffer: dict[int, dict] = {}
+                finish_reason = None
+
+                async for chunk in stream:
                     if not chunk.choices:
                         continue
 
-                    delta = chunk.choices[0].delta
+                    choice = chunk.choices[0]
+                    if choice.finish_reason:
+                        finish_reason = choice.finish_reason
 
-                    # 收集文本内容
-                    if hasattr(delta, 'content') and delta.content:
-                        content_chunks.append(delta.content)
-                        # 实时流式返回文本内容
+                    delta = getattr(choice, "delta", None)
+                    if not delta:
+                        continue
+
+                    # 文本增量
+                    if delta.content:
+                        content_parts.append(delta.content)
                         yield delta.content
 
-                    # 收集工具调用
-                    if hasattr(delta, 'tool_calls') and delta.tool_calls:
-                        for tool_call in delta.tool_calls:
-                            idx = tool_call.index
-                            if idx not in tool_calls_buffer:
-                                tool_calls_buffer[idx] = {
-                                    'id': tool_call.id,
-                                    'type': tool_call.type,
-                                    'function': {
-                                        'name': tool_call.function.name if tool_call.function.name else '',
-                                        'arguments': ''
-                                    }
-                                }
-                            else:
-                                # 追加arguments
-                                if tool_call.function.arguments:
-                                    tool_calls_buffer[idx]['function']['arguments'] += tool_call.function.arguments
+                    # 工具调用增量
+                    if delta.tool_calls:
+                        for tc in delta.tool_calls:
+                            idx = tc.index
+                            entry = tool_calls_buffer.setdefault(
+                                idx,
+                                {
+                                    "id": tc.id,
+                                    "type": tc.type or "function",
+                                    "function": {"name": "", "arguments": ""},
+                                },
+                            )
+
+                            # id/type 可能在后续 chunk 才出现
+                            if tc.id:
+                                entry["id"] = tc.id
+                            if tc.type:
+                                entry["type"] = tc.type
+
+                            if tc.function:
+                                if tc.function.name:
+                                    entry["function"]["name"] = tc.function.name
+                                if tc.function.arguments:
+                                    entry["function"]["arguments"] += tc.function.arguments
+
+                content = "".join(content_parts)
+                tool_calls_list = [tool_calls_buffer[i] for i in sorted(tool_calls_buffer.keys())]
+
+                logger.info(
+                    f"[{self.name}] Stream finished: finish_reason={finish_reason}, "
+                    f"content_chars={len(content)}, tool_calls={len(tool_calls_list)}"
+                )
 
                 # 如果有工具调用，处理它们
-                if tool_calls_buffer:
-                    tool_calls_list = list(tool_calls_buffer.values())
-
+                if tool_calls_list:
                     # 添加助手消息（包含工具调用）到历史
                     openai_messages.append({
                         'role': 'assistant',
-                        'content': ''.join(content_chunks) if content_chunks else None,
+                        'content': content or None,
                         'tool_calls': tool_calls_list
                     })
 
@@ -158,7 +190,8 @@ class DynamicAgent(BaseAgent):
                     iteration += 1
                     continue
                 else:
-                    # 没有工具调用，正常结束
+                    if mcp_tools and iteration == 0:
+                        logger.info(f"[{self.name}] No tool_calls emitted while tools are available")
                     break
 
             except HTTPException:
@@ -188,12 +221,17 @@ class DynamicAgent(BaseAgent):
             dict: 工具调用事件或 OpenAI 消息
         """
         for tool_call in tool_calls:
-            tool_id = tool_call['function']['name']
+            sanitized_tool_name = tool_call['function']['name']
             call_id = tool_call['id']
+
+            # 将 OpenAI 的 tool 名（sanitize 过）映射回原始 tool_id（server:tool）
+            # 这样前端展示、DB 存储的 tool_name/mcp_server 都更准确可读
+            tool_id = self.mcp_tool_registry._sanitized_name_map.get(sanitized_tool_name, sanitized_tool_name)
 
             try:
                 # 解析参数
-                arguments = json.loads(tool_call['function']['arguments'])
+                raw_arguments = tool_call['function'].get('arguments', '')
+                arguments = json.loads(raw_arguments) if raw_arguments and raw_arguments.strip() else {}
 
                 logger.info(f"[{self.name}] Executing tool: {tool_id} with args: {arguments}")
 
@@ -201,6 +239,7 @@ class DynamicAgent(BaseAgent):
                 yield {
                     "type": "tool_call",
                     "tool_id": tool_id,
+                    "tool_call_id": call_id,
                     "arguments": arguments
                 }
 
@@ -214,6 +253,7 @@ class DynamicAgent(BaseAgent):
                 yield {
                     "type": "tool_result",
                     "tool_id": tool_id,
+                    "tool_call_id": call_id,
                     "result": result_content,
                     "error": False
                 }
@@ -231,6 +271,7 @@ class DynamicAgent(BaseAgent):
                 yield {
                     "type": "tool_result",
                     "tool_id": tool_id,
+                    "tool_call_id": call_id,
                     "result": error_msg,
                     "error": True
                 }
@@ -245,6 +286,7 @@ class DynamicAgent(BaseAgent):
                 yield {
                     "type": "tool_result",
                     "tool_id": tool_id,
+                    "tool_call_id": call_id,
                     "result": error_msg,
                     "error": True
                 }
