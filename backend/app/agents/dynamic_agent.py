@@ -118,9 +118,8 @@ class DynamicAgent(BaseAgent):
                 finish_reason = None
 
                 async for chunk in stream:
-                    if not chunk.choices:
+                    if not getattr(chunk, "choices", None):
                         continue
-
                     choice = chunk.choices[0]
                     if choice.finish_reason:
                         finish_reason = choice.finish_reason
@@ -130,12 +129,12 @@ class DynamicAgent(BaseAgent):
                         continue
 
                     # 文本增量
-                    if delta.content:
+                    if getattr(delta, "content", None):
                         content_parts.append(delta.content)
                         yield delta.content
 
                     # 工具调用增量
-                    if delta.tool_calls:
+                    if getattr(delta, "tool_calls", None):
                         for tc in delta.tool_calls:
                             idx = tc.index
                             entry = tool_calls_buffer.setdefault(
@@ -169,6 +168,7 @@ class DynamicAgent(BaseAgent):
 
                 # 如果有工具调用，处理它们
                 if tool_calls_list:
+
                     # 添加助手消息（包含工具调用）到历史
                     openai_messages.append({
                         'role': 'assistant',
@@ -223,10 +223,9 @@ class DynamicAgent(BaseAgent):
         for tool_call in tool_calls:
             sanitized_tool_name = tool_call['function']['name']
             call_id = tool_call['id']
-
-            # 将 OpenAI 的 tool 名（sanitize 过）映射回原始 tool_id（server:tool）
-            # 这样前端展示、DB 存储的 tool_name/mcp_server 都更准确可读
-            tool_id = self.mcp_tool_registry._sanitized_name_map.get(sanitized_tool_name, sanitized_tool_name)
+            tool_id = sanitized_tool_name
+            if self.mcp_tool_registry and hasattr(self.mcp_tool_registry, "_sanitized_name_map"):
+                tool_id = self.mcp_tool_registry._sanitized_name_map.get(sanitized_tool_name, sanitized_tool_name)
 
             try:
                 # 解析参数
@@ -239,7 +238,6 @@ class DynamicAgent(BaseAgent):
                 yield {
                     "type": "tool_call",
                     "tool_id": tool_id,
-                    "tool_call_id": call_id,
                     "arguments": arguments
                 }
 
@@ -253,7 +251,6 @@ class DynamicAgent(BaseAgent):
                 yield {
                     "type": "tool_result",
                     "tool_id": tool_id,
-                    "tool_call_id": call_id,
                     "result": result_content,
                     "error": False
                 }
@@ -271,7 +268,6 @@ class DynamicAgent(BaseAgent):
                 yield {
                     "type": "tool_result",
                     "tool_id": tool_id,
-                    "tool_call_id": call_id,
                     "result": error_msg,
                     "error": True
                 }
@@ -286,7 +282,6 @@ class DynamicAgent(BaseAgent):
                 yield {
                     "type": "tool_result",
                     "tool_id": tool_id,
-                    "tool_call_id": call_id,
                     "result": error_msg,
                     "error": True
                 }

@@ -57,6 +57,8 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       target: production
+      args:
+        VITE_API_BASE_URL: ""
     container_name: code2mcp-frontend
     restart: unless-stopped
     volumes:
