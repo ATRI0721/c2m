@@ -1,71 +1,31 @@
-# Python
+### Env / secrets
+.env
+.env.*
+!.env.example
+
+### Python
 __pycache__/
 *.py[cod]
 *$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# Virtual Environment
-venv/
-ENV/
-env/
-.venv
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# Testing
 .pytest_cache/
-htmlcov/
 .coverage
-coverage.xml
-*.cover
-.hypothesis/
+htmlcov/
+.venv/
+venv/
 
-# Database
-# Keep the data/ directory structure but ignore database files
-*.db
-*.sqlite
-*.sqlite3
-# But keep the data directory itself
-!data/.gitkeep
-
-# Environment
-.env.local
-.env.*.local
-
-# Logs
+### Logs
 *.log
 logs/
 
-# OS
+### Databases / local data
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+### OS / IDE
 .DS_Store
 Thumbs.db
-nul
+.idea/
+.vscode/
 
-# Temporary files
-*.tmp
-*.bak
-*.swp
-
-# Excel
-城市计算调研.xlsx
